@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
-
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
 
 /**
  * ---------------------------------------------------------------------------
@@ -8,79 +7,117 @@ import { useParams, useSearchParams, Link } from 'react-router-dom';
  * ---------------------------------------------------------------------------
  * Route it like: <Route path="/financial-years/:id" element={<FinancialYear />} />
  *
- * The sidebar items (Overview, Trial Balance, Financial Statements, Income,
- * Cash & Bank, Receivables, Payables, Equity) are NOT separate routes —
- * clicking one just swaps which panel is rendered via local state. The
- * "view" search param is kept in sync purely so the page stays linkable
- * (e.g. /financial-years/7?view=trial-balance), same idea as the reference
- * screenshot's URL.
- *
  * Data flow:
- *  - useFinancialYearData() below is a STAND-IN for real API calls. Replace
- *    its body with fetches to your Backend (e.g. GET /api/financial-years/:id,
- *    GET /api/financial-years/:id/accounts) using the Bearer token the same
- *    way Home.jsx / AuthContext do it elsewhere in this project.
+ *  - useFinancialYearData() fetches GET /financial-years/:id, scoped to the
+ *    logged-in school via the Bearer token. That endpoint also returns
+ *    aggregated totals + all TrialBalanceRow docs for the year.
+ *  - Download button hits GET /financial-years/:id/trial-balance/template
+ *    (returns the combined .xlsx as a blob, one sheet per selected account).
+ *  - Upload posts the filled file to
+ *    POST /financial-years/:id/trial-balance/upload, then re-fetches.
  * ---------------------------------------------------------------------------
  */
 
-const NAV_ITEMS = [
-  { key: 'overview', label: 'Overview', icon: IconGrid },
-  { key: 'trial-balance', label: 'Trial Balance', icon: IconUpload },
-  { key: 'financial-statements', label: 'Financial Statements', icon: IconDoc },
-  { key: 'income', label: 'Income', icon: IconTrendUp },
-  { key: 'cash-bank', label: 'Cash & Bank', icon: IconBank },
-  { key: 'receivables', label: 'Receivables', icon: IconUsers },
-  { key: 'payables', label: 'Payables', icon: IconCard },
-  { key: 'equity', label: 'Equity', icon: IconPiggyBank },
-];
+const API_URL = "https://trialbal-1.onrender.com";
 
-// ---- data hook (replace with real API calls later) ------------------------
+// ---- data hook -----------------------------------------------------------
 function useFinancialYearData(financialYearId) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  async function refetch() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const res = await fetch(`${API_URL}/financial-years/${financialYearId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) throw new Error("Failed to load financial year");
+    const json = await res.json();
+
+    setData({
+      school: json.schoolSnapshot, // filled in below from a separate /me call on first load
+      user: json.userSnapshot,
+      financialYear: {
+        id: json._id,
+        label: json.label,
+        status: json.status,
+        startDate: json.startDate?.slice(0, 10),
+        endDate: json.endDate?.slice(0, 10),
+      },
+      accounts: json.accounts.map((a) => ({ id: a.key, key: a.key, name: a.name })),
+      trialBalanceRows: json.trialBalanceRows.map((r) => ({
+        fundName: r.accountKey,
+        voteheadName: r.voteheadName,
+        note: '',
+        estimates: r.estimates,
+        commitment: r.commitment,
+        debit: r.debit,
+        credit: r.credit,
+      })),
+      totals: json.totals,
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        // TODO: swap for real calls, e.g.
-        // const token = await getToken();
-        // const res = await fetch(`${API_BASE_URL}/financial-years/${financialYearId}`, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
-        // const json = await res.json();
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
 
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        const [meRes, yearRes] = await Promise.all([
+          fetch(`${API_URL}/me`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/financial-years/${financialYearId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-        const json = {
-          school: {
-            name: 'Stephen Kanja hybrid school',
-            county: 'Kwale County',
-          },
-          user: {
-            name: 'Mwayeye kayeye',
-            role: 'Principal',
-            initials: 'MK',
-          },
-          financialYear: {
-            id: financialYearId,
-            label: '2026/27',
-            status: 'finalized',
-            startDate: '2026-07-01',
-            endDate: '2027-06-30',
-          },
-          accounts: [
-            { id: 1, name: 'Operations' },
-            { id: 2, name: 'Tuition' },
-            { id: 3, name: 'School Fund' },
-            { id: 4, name: 'Infrastructure' },
-          ],
-          // Empty until a template has been uploaded and parsed by the backend.
-          trialBalanceRows: [],
-        };
+        if (!meRes.ok || !yearRes.ok) throw new Error("Failed to load financial year");
 
-        if (!cancelled) setData(json);
+        const school = await meRes.json();
+        const json = await yearRes.json();
+
+        const initials = school.principalName
+          ? school.principalName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+          : '??';
+
+        if (!cancelled) {
+          setData({
+            school: { name: school.schoolName, county: school.county },
+            user: { name: school.principalName, role: 'Principal', initials },
+            financialYear: {
+              id: json._id,
+              label: json.label,
+              status: json.status,
+              startDate: json.startDate?.slice(0, 10),
+              endDate: json.endDate?.slice(0, 10),
+            },
+            accounts: json.accounts.map((a) => ({ id: a.key, key: a.key, name: a.name })),
+            trialBalanceRows: json.trialBalanceRows.map((r) => ({
+              fundName: r.accountKey,
+              voteheadName: r.voteheadName,
+              note: '',
+              estimates: r.estimates,
+              commitment: r.commitment,
+              debit: r.debit,
+              credit: r.credit,
+            })),
+            totals: json.totals,
+          });
+        }
+      } catch (err) {
+        if (!cancelled) setError(err);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -90,9 +127,9 @@ function useFinancialYearData(financialYearId) {
     return () => {
       cancelled = true;
     };
-  }, [financialYearId]);
+  }, [financialYearId, navigate]);
 
-  return { data, loading };
+  return { data, loading, error, refetch };
 }
 
 // ---- tiny inline icon set --------------------------------------------------
@@ -115,6 +152,17 @@ function IconCollapse(p) { return (<svg {...iconProps} {...p}><rect x="3" y="4" 
 function IconDownload(p) { return (<svg {...iconProps} {...p}><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M4 21h16" /></svg>); }
 function IconUploadFile(p) { return (<svg {...iconProps} {...p}><path d="M12 21V9" /><path d="m7 14 5-5 5 5" /><path d="M4 3h16" /></svg>); }
 
+const NAV_ITEMS = [
+  { key: 'overview', label: 'Overview', icon: IconGrid },
+  { key: 'trial-balance', label: 'Trial Balance', icon: IconUpload },
+  { key: 'financial-statements', label: 'Financial Statements', icon: IconDoc },
+  { key: 'income', label: 'Income', icon: IconTrendUp },
+  { key: 'cash-bank', label: 'Cash & Bank', icon: IconBank },
+  { key: 'receivables', label: 'Receivables', icon: IconUsers },
+  { key: 'payables', label: 'Payables', icon: IconCard },
+  { key: 'equity', label: 'Equity', icon: IconPiggyBank },
+];
+
 // ---- helper -----------------------------------------------------------
 function formatAmount(n) {
   const value = typeof n === 'number' ? n : 0;
@@ -122,30 +170,45 @@ function formatAmount(n) {
 }
 
 // ---- sub-components -----------------------------------------------------
-function TrialBalancePanel({ financialYearId, accounts, trialBalanceRows }) {
-  const [selectedAccountIds, setSelectedAccountIds] = useState(accounts.map((a) => a.id));
+function TrialBalancePanel({ financialYearId, accounts, trialBalanceRows, onUploaded }) {
+  const [selectedKeys, setSelectedKeys] = useState(accounts.map((a) => a.key));
   const [uploadStatus, setUploadStatus] = useState('');
   const fileInputRef = React.useRef(null);
 
-  function toggleAccount(id) {
-    setSelectedAccountIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+  function toggleAccount(key) {
+    setSelectedKeys((prev) =>
+      prev.includes(key) ? prev.filter((x) => x !== key) : [...prev, key]
     );
   }
 
   function handleDownload() {
-    if (selectedAccountIds.length === 0) {
+    if (selectedKeys.length === 0) {
       alert('Select at least one account.');
       return;
     }
 
+    const token = localStorage.getItem("token");
     const params = new URLSearchParams();
-    params.set('financial_year_id', financialYearId);
-    selectedAccountIds.forEach((id) => params.append('account_ids[]', id));
+    selectedKeys.forEach((key) => params.append('account_keys[]', key));
 
-    // TODO: point this at your real Backend endpoint, e.g.
-    // window.location.href = `${API_BASE_URL}/financial-years/${financialYearId}/trial-balance/template?${params.toString()}`;
-    window.location.href = `/api/financial-years/trial-balance-template?${params.toString()}`;
+    fetch(`${API_URL}/financial-years/${financialYearId}/trial-balance/template?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Download failed');
+        return res.blob();
+      })
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `TrialBalance_${financialYearId}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(() => alert('Could not download the template. Please try again.'));
   }
 
   function handleUploadClick() {
@@ -159,23 +222,22 @@ function TrialBalancePanel({ financialYearId, accounts, trialBalanceRows }) {
     setUploadStatus(`Uploading ${file.name}…`);
 
     const formData = new FormData();
-    formData.append('financial_year_id', financialYearId);
     formData.append('template', file);
 
     try {
-      // TODO: point this at your real Backend endpoint.
-      const res = await fetch('/api/financial-years/trial-balance-upload', {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/financial-years/${financialYearId}/trial-balance/upload`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       const json = await res.json();
 
-      if (json.success) {
-        setUploadStatus('Uploaded successfully — refreshing…');
-        // TODO: re-fetch trial balance rows instead of a full reload once wired up.
-        window.location.reload();
+      if (res.ok && json.success) {
+        setUploadStatus(`Uploaded successfully — ${json.rowsProcessed} rows processed.`);
+        onUploaded?.();
       } else {
-        setUploadStatus(`Upload failed: ${json.message || 'Unknown error'}`);
+        setUploadStatus(`Upload failed: ${json.error || 'Unknown error'}`);
       }
     } catch {
       setUploadStatus('Upload failed: could not reach the server.');
@@ -194,11 +256,11 @@ function TrialBalancePanel({ financialYearId, accounts, trialBalanceRows }) {
 
         <div className="fy-checkbox-row">
           {accounts.map((account) => (
-            <label key={account.id}>
+            <label key={account.key}>
               <input
                 type="checkbox"
-                checked={selectedAccountIds.includes(account.id)}
-                onChange={() => toggleAccount(account.id)}
+                checked={selectedKeys.includes(account.key)}
+                onChange={() => toggleAccount(account.key)}
               />
               {account.name}
             </label>
@@ -265,6 +327,33 @@ function TrialBalancePanel({ financialYearId, accounts, trialBalanceRows }) {
   );
 }
 
+function OverviewPanel({ totals }) {
+  return (
+    <div className="fy-cards-row">
+      <div className="fy-stat-card">
+        <p className="fy-stat-label">Total Receipts</p>
+        <p className="fy-stat-value">{formatAmount(totals.receipts)}</p>
+      </div>
+      <div className="fy-stat-card">
+        <p className="fy-stat-label">Total Payments</p>
+        <p className="fy-stat-value">{formatAmount(totals.payments)}</p>
+      </div>
+      <div className="fy-stat-card">
+        <p className="fy-stat-label">Surplus / (Deficit)</p>
+        <p className="fy-stat-value">{formatAmount(totals.surplus)}</p>
+      </div>
+      <div className="fy-stat-card">
+        <p className="fy-stat-label">Cash & Bank</p>
+        <p className="fy-stat-value">{formatAmount(totals.cash)}</p>
+      </div>
+      <div className="fy-stat-card">
+        <p className="fy-stat-label">Net Assets</p>
+        <p className="fy-stat-value">{formatAmount(totals.netAssets)}</p>
+      </div>
+    </div>
+  );
+}
+
 function PlaceholderPanel({ title, children }) {
   return (
     <div className="fy-panel fy-placeholder">
@@ -278,14 +367,24 @@ function PlaceholderPanel({ title, children }) {
 function FinancialYear() {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const financialYearId = id || '7';
+  const financialYearId = id;
 
-  const { data, loading } = useFinancialYearData(financialYearId);
+  const { data, loading, refetch } = useFinancialYearData(financialYearId);
   const [activeView, setActiveView] = useState(searchParams.get('view') || 'trial-balance');
 
   function handleNavClick(key) {
     setActiveView(key);
     setSearchParams({ view: key }, { replace: true });
+  }
+
+  async function handleFinalize() {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_URL}/financial-years/${financialYearId}/finalize`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.ok) refetch();
+    else alert('Could not finalize this financial year.');
   }
 
   if (loading || !data) {
@@ -296,7 +395,7 @@ function FinancialYear() {
     );
   }
 
-  const { school, user, financialYear, accounts, trialBalanceRows } = data;
+  const { school, user, financialYear, accounts, trialBalanceRows, totals } = data;
 
   return (
     <div className="fy-shell">
@@ -330,7 +429,7 @@ function FinancialYear() {
 
       {/* ============================= SIDEBAR ============================= */}
       <aside className="fy-sidebar">
-        <Link className="fy-breadcrumb" to="/financial-years">
+        <Link className="fy-breadcrumb" to="/home">
           <IconChevronLeft />
           All Financial Years
         </Link>
@@ -342,10 +441,17 @@ function FinancialYear() {
           </div>
           <p className="fy-year-dates">{financialYear.startDate} – {financialYear.endDate}</p>
 
-          <button className="fy-unlock-btn" type="button" onClick={() => alert('TODO: wire up unlock-for-editing endpoint')}>
-            <IconLock />
-            Unlock for editing
-          </button>
+          {financialYear.status === 'finalized' ? (
+            <button className="fy-unlock-btn" type="button" disabled>
+              <IconLock />
+              Finalized
+            </button>
+          ) : (
+            <button className="fy-unlock-btn" type="button" onClick={handleFinalize}>
+              <IconLock />
+              Finalize & lock
+            </button>
+          )}
         </div>
 
         <nav className="fy-nav">
@@ -365,19 +471,14 @@ function FinancialYear() {
 
       {/* ============================= MAIN ============================= */}
       <main className="fy-main">
-        {activeView === 'overview' && (
-          <PlaceholderPanel title="Overview">
-            Summary cards (receipts, payments, surplus, cash, net assets) go here — same shape
-            as the dashboard's stats, scoped to this financial year.
-            Backend: GET /api/financial-years/{financialYear.id}/summary
-          </PlaceholderPanel>
-        )}
+        {activeView === 'overview' && <OverviewPanel totals={totals} />}
 
         {activeView === 'trial-balance' && (
           <TrialBalancePanel
             financialYearId={financialYear.id}
             accounts={accounts}
             trialBalanceRows={trialBalanceRows}
+            onUploaded={refetch}
           />
         )}
 
