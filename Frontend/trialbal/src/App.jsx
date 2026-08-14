@@ -5,7 +5,7 @@ import Header from "./nav/header";
 import Footer from "./nav/footer";
 import Home from "./home";
 import FinancialYear from "./financial-year";
-import ProtectedRoute from "./ProtectedRoute";
+import ProtectedRoute from "./protectedRoute";
 
 import "./App.css";
 
