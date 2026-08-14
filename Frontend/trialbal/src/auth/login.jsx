@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { FaBuildingColumns, FaEnvelope, FaLock, FaArrowRightToBracket } from "react-icons/fa6";
 
 const API_URL = "https://trialbal-1.onrender.com";
@@ -29,13 +29,10 @@ export default function Login() {
       const data = await res.json();
 
       if (res.ok) {
-        // Save token for ProtectedRoute checks
         localStorage.setItem("token", data.token);
-
         setStatus({ type: "success", text: "Login successful! Redirecting…" });
 
         setTimeout(() => {
-          console.log("Attempting navigate to /home");
           navigate("/home");
         }, 1000);
       } else {
@@ -85,7 +82,7 @@ export default function Login() {
           />
         </div>
 
-        <a href="/forgot" className="forgot-link">Forgot password?</a>
+        <Link to="/forgot" className="forgot-link">Forgot password?</Link>
 
         <button type="submit" className="submit-button" disabled={loading}>
           <FaArrowRightToBracket /> {loading ? "Signing in…" : "Sign in"}
@@ -104,7 +101,7 @@ export default function Login() {
         )}
 
         <p className="signin-link">
-          New school? <a href="/register">Register here</a>
+          New school? <Link to="/register">Register here</Link>
         </p>
       </form>
     </div>
