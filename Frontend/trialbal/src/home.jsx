@@ -433,11 +433,20 @@ function Home() {
 
         {/* financial years */}
         <div>
-          <h3 className="hk-section-title">
-            <IconCalendar className="hk-section-title-icon" /> Financial Years
-          </h3>
+          <div className="hk-section-title-row">
+            <h3 className="hk-section-title">
+              <IconCalendar className="hk-section-title-icon" /> Financial Years
+            </h3>
+            <button
+              type="button"
+              className="hk-new-year-link"
+              onClick={() => navigate('/financial-years/new')}
+            >
+              + New Financial Year
+            </button>
+          </div>
           {data.financialYears.length === 0 ? (
-            <p className="hk-empty-sub">No financial years yet. Use "Manage Financial Years" above to create one.</p>
+            <p className="hk-empty-sub">No financial years yet. Use "+ New Financial Year" above to create one.</p>
           ) : (
             <div className="hk-grid-years">
               {data.financialYears.map((year) => (
