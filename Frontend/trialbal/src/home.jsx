@@ -4,15 +4,12 @@ import { useNavigate } from 'react-router-dom';
  * ---------------------------------------------------------------------------
  * Home.jsx — Principal / HOI dashboard landing page
  * ---------------------------------------------------------------------------
- * Plain-CSS version. Styling lives in Home.css and is applied via regular
- * class names instead of Tailwind utility classes.
- *
  * Data flow:
- *  - useSessionData() below fetches the logged-in school/principal's data
- *    from GET /me using the Bearer token stored in localStorage.
- *  - financialYear / financialYears are still placeholder data since the
- *    backend has no financial-year model yet — swap those out once that
- *    schema/endpoint exists.
+ *  - useSessionData() fetches school/principal info from GET /me and the
+ *    real list of financial years from GET /financial-years, both scoped
+ *    to the logged-in school via the Bearer token.
+ *  - Clicking a financial year card navigates to /financial-years/:id,
+ *    which is FinancialYear.jsx (fetches its own detail + trial balance).
  * ---------------------------------------------------------------------------
  */
 
@@ -40,19 +37,26 @@ function useSessionData() {
           return;
         }
 
-        const res = await fetch(`${API_URL}/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const headers = { Authorization: `Bearer ${token}` };
 
-        if (!res.ok) {
+        const [meRes, yearsRes] = await Promise.all([
+          fetch(`${API_URL}/me`, { headers }),
+          fetch(`${API_URL}/financial-years`, { headers }),
+        ]);
+
+        if (!meRes.ok || !yearsRes.ok) {
           throw new Error("Failed to load session data");
         }
 
-        const school = await res.json();
+        const school = await meRes.json();
+        const years = await yearsRes.json();
 
         const initials = school.principalName
           ? school.principalName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
           : '??';
+
+        // Use the most recent financial year for the headline stats/charts.
+        const latest = years[0] || null;
 
         const json = {
           school: {
@@ -65,31 +69,36 @@ function useSessionData() {
             role: 'Principal',
             initials,
           },
-          // TODO: replace with real financial year data once that
-          // schema/endpoint exists on the backend.
-          financialYear: {
-            label: '2026/27',
-            status: 'Finalized',
-            startDate: '2026-07-01',
-            endDate: '2027-06-30',
-            totals: {
-              receipts: 0,
-              payments: 0,
-              surplus: 0,
-              cash: 0,
-              netAssets: 0,
-            },
-          },
-          financialYears: [
-            {
-              id: 1,
-              label: '2026/27',
-              status: 'Finalized',
-              startDate: '2026-07-01',
-              endDate: '2027-06-30',
-              surplus: 0,
-            },
-          ],
+          financialYear: latest
+            ? {
+                id: latest._id,
+                label: latest.label,
+                status: latest.status,
+                startDate: latest.startDate?.slice(0, 10),
+                endDate: latest.endDate?.slice(0, 10),
+                totals: {
+                  receipts: 0,
+                  payments: 0,
+                  surplus: 0,
+                  cash: 0,
+                  netAssets: 0,
+                },
+              }
+            : {
+                label: '—',
+                status: '',
+                startDate: '',
+                endDate: '',
+                totals: { receipts: 0, payments: 0, surplus: 0, cash: 0, netAssets: 0 },
+              },
+          financialYears: years.map((y) => ({
+            id: y._id,
+            label: y.label,
+            status: y.status,
+            startDate: y.startDate?.slice(0, 10),
+            endDate: y.endDate?.slice(0, 10),
+            surplus: 0, // TODO: pull from GET /financial-years/:id totals once needed per-card
+          })),
         };
 
         if (!cancelled) setData(json);
@@ -336,11 +345,20 @@ function Home() {
   };
 
   const handleOpenAction = (key) => {
-    // TODO: navigate to the relevant screen, e.g. navigate(`/${key}`)
+    if (key === 'financial-years') {
+      // Jump to the most recent year if one exists, otherwise let the user create one.
+      if (data?.financialYears?.length) {
+        navigate(`/financial-years/${data.financialYears[0].id}`);
+      } else {
+        navigate('/financial-years/new');
+      }
+      return;
+    }
+    navigate(`/${key}`);
   };
 
   const handleOpenYear = (year) => {
-    // TODO: navigate to that financial year's detail view
+    navigate(`/financial-years/${year.id}`);
   };
 
   if (loading || !data) {
@@ -353,9 +371,6 @@ function Home() {
 
   const { school, user, financialYear } = data;
   const totals = financialYear.totals;
-  // Build a simple series for the "Receipts vs Payments" chart. Once the
-  // backend returns multiple financial years' totals, map over those here
-  // instead of wrapping the single active year.
   const series = [{ label: financialYear.label, receipts: totals.receipts, payments: totals.payments }];
 
   return (
@@ -421,11 +436,15 @@ function Home() {
           <h3 className="hk-section-title">
             <IconCalendar className="hk-section-title-icon" /> Financial Years
           </h3>
-          <div className="hk-grid-years">
-            {data.financialYears.map((year) => (
-              <FinancialYearCard key={year.id} year={year} onOpen={handleOpenYear} />
-            ))}
-          </div>
+          {data.financialYears.length === 0 ? (
+            <p className="hk-empty-sub">No financial years yet. Use "Manage Financial Years" above to create one.</p>
+          ) : (
+            <div className="hk-grid-years">
+              {data.financialYears.map((year) => (
+                <FinancialYearCard key={year.id} year={year} onOpen={handleOpenYear} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
