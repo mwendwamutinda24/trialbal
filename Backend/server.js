@@ -33,7 +33,6 @@ const SchoolSchema = new mongoose.Schema({
 const School = mongoose.model("School", SchoolSchema);
 
 // ✅ Register Endpoint
-// ✅ Register Endpoint
 app.post("/register", async (req, res) => {
   try {
     const { principalPassword, principalEmail, schoolName, ...rest } = req.body;
@@ -103,6 +102,16 @@ app.get("/verify", authMiddleware, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
+// ✅ Current school/user data (for dashboard)
+app.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const school = await School.findById(req.user.id).select("-principalPassword");
+    if (!school) return res.status(404).json({ error: "School not found" });
+    res.json(school);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 const counties = require("./data/counties");
 
