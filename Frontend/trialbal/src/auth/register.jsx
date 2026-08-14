@@ -1,111 +1,187 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FaBuildingColumns, FaEnvelope, FaLock, FaArrowRightToBracket } from "react-icons/fa6";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { FaSchool, FaUserPlus, FaEnvelope, FaPhone, FaLock } from "react-icons/fa";
 
 const API_URL = "https://trialbal-1.onrender.com";
 
-export default function Login() {
-  const [formData, setFormData] = useState({ email: "", password: "" });
+export default function RegisterSchool() {
+  const [formData, setFormData] = useState({
+    schoolName: "",
+    regNumber: "",
+    schoolType: "Day",
+    county: "",
+    subCounty: "",
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
   const [status, setStatus] = useState({ type: "", text: "" });
   const [loading, setLoading] = useState(false);
+  const [counties, setCounties] = useState({});
+  const [countiesLoading, setCountiesLoading] = useState(true);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchCounties = async () => {
+      try {
+        const res = await fetch(`${API_URL}/counties`);
+        const data = await res.json();
+        setCounties(data);
+      } catch (err) {
+        setStatus({ type: "error", text: "Couldn't load counties list. Please refresh the page." });
+      } finally {
+        setCountiesLoading(false);
+      }
+    };
+    fetchCounties();
+  }, []);
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "county") {
+      setFormData({ ...formData, county: value, subCounty: "" });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({ type: "", text: "" });
-    setLoading(true);
 
+    if (formData.password.length < 6) {
+      setStatus({ type: "error", text: "Password must be at least 6 characters." });
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/login`, {
+      const payload = {
+        schoolName: formData.schoolName,
+        regNumber: formData.regNumber,
+        schoolType: formData.schoolType,
+        county: formData.county,
+        subCounty: formData.subCounty,
+        principalName: formData.fullName,
+        principalEmail: formData.email,
+        principalPhone: formData.phone,
+        principalPassword: formData.password,
+      };
+
+      const res = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        // Save token for ProtectedRoute checks
-        localStorage.setItem("token", data.token);
-
-        setStatus({ type: "success", text: "Login successful! Redirecting…" });
-
+        setStatus({ type: "success", text: "School registered successfully! Redirecting to login…" });
         setTimeout(() => {
-          console.log("Attempting navigate to /home");
-          navigate("/home");
-        }, 1000);
+          navigate("/login");
+        }, 1200);
       } else {
-        setStatus({
-          type: "error",
-          text: data.error || "Login failed. Please check your credentials.",
-        });
+        setStatus({ type: "error", text: data.error || "Registration failed. Please try again." });
       }
     } catch (err) {
-      setStatus({
-        type: "error",
-        text: "Couldn't reach the server. Check your connection and try again.",
-      });
+      setStatus({ type: "error", text: "Couldn't reach the server. Check your connection and try again." });
     } finally {
       setLoading(false);
     }
   };
 
+  const subCountyOptions = formData.county ? counties[formData.county] || [] : [];
+
   return (
-    <div className="login-page">
-      <form className="login-card" onSubmit={handleSubmit}>
-        <div className="brand-icon"><FaBuildingColumns /></div>
-        <h1 className="form-title">IPSAS annual financial reporting</h1>
-        <p className="form-subtitle">Sign in to your school account</p>
+    <div className="register-page">
+      <form className="register-card" onSubmit={handleSubmit}>
+        <div className="brand-icon"><FaSchool /></div>
+        <h1 className="form-title">Register your school</h1>
+        <p className="form-subtitle">Set up your school and its first Principal account</p>
 
         <div className="field">
-          <label className="field-label"><FaEnvelope /> Email</label>
-          <input
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="field-input"
-            required
-          />
+          <label className="field-label">School name</label>
+          <input name="schoolName" value={formData.schoolName} onChange={handleChange} className="field-input" required />
+        </div>
+
+        <div className="field-row">
+          <div className="field">
+            <label className="field-label">Registration number</label>
+            <input name="regNumber" value={formData.regNumber} onChange={handleChange} className="field-input" />
+          </div>
+          <div className="field">
+            <label className="field-label">School type</label>
+            <select name="schoolType" value={formData.schoolType} onChange={handleChange} className="field-input">
+              <option>Day</option><option>Boarding</option><option>Mixed</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="field-row">
+          <div className="field">
+            <label className="field-label">County</label>
+            <select
+              name="county"
+              value={formData.county}
+              onChange={handleChange}
+              className="field-input"
+              disabled={countiesLoading}
+            >
+              <option value="">{countiesLoading ? "Loading..." : "Select..."}</option>
+              {Object.keys(counties).sort().map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label className="field-label">Sub-County</label>
+            <select
+              name="subCounty"
+              value={formData.subCounty}
+              onChange={handleChange}
+              className="field-input"
+              disabled={!formData.county}
+            >
+              <option value="">{formData.county ? "Select..." : "Select a county first"}</option>
+              {subCountyOptions.map((sc) => <option key={sc} value={sc}>{sc}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="section-divider"><span className="section-label">Principal account</span></div>
+
+        <div className="field">
+          <label className="field-label">Full name</label>
+          <input name="fullName" value={formData.fullName} onChange={handleChange} className="field-input" required />
+        </div>
+
+        <div className="field-row">
+          <div className="field">
+            <label className="field-label"><FaEnvelope /> Email</label>
+            <input name="email" type="email" value={formData.email} onChange={handleChange} className="field-input" required />
+          </div>
+          <div className="field">
+            <label className="field-label"><FaPhone /> Phone</label>
+            <input name="phone" type="tel" value={formData.phone} onChange={handleChange} className="field-input" />
+          </div>
         </div>
 
         <div className="field">
           <label className="field-label"><FaLock /> Password</label>
-          <input
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="field-input"
-            required
-          />
+          <input name="password" type="password" value={formData.password} onChange={handleChange} className="field-input" required />
         </div>
 
-        <a href="/forgot" className="forgot-link">Forgot password?</a>
-
         <button type="submit" className="submit-button" disabled={loading}>
-          <FaArrowRightToBracket /> {loading ? "Signing in…" : "Sign in"}
+          <FaUserPlus /> {loading ? "Registering…" : "Register school"}
         </button>
 
         {status.text && (
-          <p
-            className={`form-message ${
-              status.type === "success"
-                ? "form-message-success"
-                : "form-message-error"
-            }`}
-          >
+          <p className={`form-message ${status.type === "success" ? "form-message-success" : "form-message-error"}`}>
             {status.text}
           </p>
         )}
 
-        <p className="signin-link">
-          New school? <a href="/register">Register here</a>
-        </p>
+        <p className="signin-link">Already registered? <Link to="/login">Sign in</Link></p>
       </form>
     </div>
   );
