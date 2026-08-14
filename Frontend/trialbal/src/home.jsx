@@ -1,62 +1,72 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 /**
  * ---------------------------------------------------------------------------
  * Home.jsx — Principal / HOI dashboard landing page
  * ---------------------------------------------------------------------------
- * Plain-CSS version. Styling now lives in Home.css (imported above) and is
- * applied via regular class names instead of Tailwind utility classes.
- * Behavior and data flow are unchanged from the original.
+ * Plain-CSS version. Styling lives in Home.css and is applied via regular
+ * class names instead of Tailwind utility classes.
  *
  * Data flow:
- *  - useSessionData() below is a STAND-IN for the real auth/session hook.
- *    It fakes a short loading delay and returns mock school + user + finance
- *    data shaped exactly like what the backend should eventually return.
- *  - Wire it up later by replacing the body of useSessionData() with a real
- *    fetch to your PHP API (e.g. GET /api/dashboard/summary) using the
- *    Bearer token from secureStorage / AuthContext, and mapping the JSON
- *    response onto the same `data` shape used here. Nothing else on the
- *    page needs to change.
- *  - Because the shape already carries `user.role`, this same component can
- *    later branch (or be reused) for HOI / Teacher / Student dashboards —
- *    for now it renders the Principal/HOI view shown in the mock.
+ *  - useSessionData() below fetches the logged-in school/principal's data
+ *    from GET /me using the Bearer token stored in localStorage.
+ *  - financialYear / financialYears are still placeholder data since the
+ *    backend has no financial-year model yet — swap those out once that
+ *    schema/endpoint exists.
  * ---------------------------------------------------------------------------
  */
+
+const API_URL = "https://trialbal-1.onrender.com";
 
 // ---- brand tokens -----------------------------------------------------
 const GOLD = '#E8B923';
 const INK = '#141414';
 
-// ---- mock data hook (replace with real fetch later) --------------------
+// ---- real session data hook --------------------------------------------
 function useSessionData() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        // TODO: swap for a real call once the backend endpoint exists, e.g.
-        // const token = await getToken();
-        // const res = await fetch(`${API_BASE_URL}/dashboard/summary`, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
-        // const json = await res.json();
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
 
-        await new Promise((resolve) => setTimeout(resolve, 250));
+        const res = await fetch(`${API_URL}/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to load session data");
+        }
+
+        const school = await res.json();
+
+        const initials = school.principalName
+          ? school.principalName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+          : '??';
 
         const json = {
           school: {
-            name: 'Stephen Kanja Hybrid School',
-            county: 'Kwale County',
+            name: school.schoolName,
+            county: school.county,
             logoUrl: null,
           },
           user: {
-            name: 'Mwayeye Kayeye',
+            name: school.principalName,
             role: 'Principal',
-            initials: 'MK',
+            initials,
           },
+          // TODO: replace with real financial year data once that
+          // schema/endpoint exists on the backend.
           financialYear: {
             label: '2026/27',
             status: 'Finalized',
@@ -84,7 +94,10 @@ function useSessionData() {
 
         if (!cancelled) setData(json);
       } catch (err) {
-        if (!cancelled) setError(err);
+        if (!cancelled) {
+          setError(err);
+          navigate("/login");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -94,7 +107,7 @@ function useSessionData() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [navigate]);
 
   return { data, loading, error };
 }
@@ -311,17 +324,19 @@ function ProfileMenu({ user, onEditProfile, onLogOut }) {
 // ---- page ---------------------------------------------------------------
 function Home() {
   const { data, loading } = useSessionData();
+  const navigate = useNavigate();
 
   const handleEditProfile = () => {
     // TODO: navigate to profile edit screen
   };
 
   const handleLogOut = () => {
-    // TODO: clear session (secureStorage) and redirect to login
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   const handleOpenAction = (key) => {
-    // TODO: navigate to the relevant screen, e.g. router.push(`/${key}`)
+    // TODO: navigate to the relevant screen, e.g. navigate(`/${key}`)
   };
 
   const handleOpenYear = (year) => {
@@ -366,7 +381,7 @@ function Home() {
       <main className="hk-main">
         {/* welcome */}
         <div>
-          <h2 className="hk-welcome-title">Welcome back, {user.name.split(' ')[0]}</h2>
+          <h2 className="hk-welcome-title">Welcome back, {user.name?.split(' ')[0]}</h2>
           <p className="hk-welcome-sub">{school.name} — here's where things stand.</p>
         </div>
 
