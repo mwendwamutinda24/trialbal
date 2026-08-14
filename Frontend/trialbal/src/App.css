@@ -15,6 +15,113 @@
   box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
   padding: 40px 44px 36px;
 }
+/* -------------------------------------------------------------------------
+   new-financial-year.css
+   Only the classes NewFinancialYear.jsx introduces beyond your existing
+   hk-* / fy-* styles. Import this alongside your existing stylesheet(s),
+   e.g.: import './new-financial-year.css';
+------------------------------------------------------------------------- */
+
+.nfy-main {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.nfy-panel {
+  margin-top: 16px;
+}
+
+.nfy-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.nfy-row {
+  display: flex;
+  gap: 16px;
+}
+
+.nfy-row .nfy-field {
+  flex: 1;
+}
+
+.nfy-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nfy-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+
+.nfy-input {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #141414;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.nfy-input:focus {
+  border-color: #e8b923;
+  box-shadow: 0 0 0 3px rgba(232, 185, 35, 0.15);
+}
+
+.nfy-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin: 0;
+}
+
+.nfy-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.nfy-existing-note {
+  margin-top: 16px;
+}
+
+/* -------------------------------------------------------------------------
+   Small addition to Home.jsx: a persistent "+ New Financial Year" link next
+   to the "Financial Years" section heading.
+------------------------------------------------------------------------- */
+
+.hk-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hk-new-year-link {
+  background: none;
+  border: none;
+  color: #e8b923;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.hk-new-year-link:hover {
+  text-decoration: underline;
+}
 
 .brand-icon {
   width: 48px;
