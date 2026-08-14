@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 
+const API_URL = "https://trialbal-1.onrender.com";
+
 export default function ProtectedRoute({ children }) {
   const [status, setStatus] = useState("checking");
 
@@ -14,7 +16,7 @@ export default function ProtectedRoute({ children }) {
       return;
     }
 
-    fetch(`${import.meta.env.VITE_API_URL}/verify`, {
+    fetch(`${API_URL}/verify`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
