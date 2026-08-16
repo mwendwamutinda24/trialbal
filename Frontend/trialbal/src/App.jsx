@@ -4,9 +4,9 @@ import Login from "./auth/login";
 import Header from "./nav/header";
 import Footer from "./nav/footer";
 import Home from "./home";
+import NewFinancialYear from "./new-financial-year";
 import FinancialYear from "./financial-year";
 import ProtectedRoute from "./protectedRoute";
-
 import "./App.css";
 
 function App() {
@@ -14,10 +14,22 @@ function App() {
     <Router>
       <Header />
       <Routes>
-        <Routes>
-
-        <Route path="/financial-years/new" element={<NewFinancialYear />} />
-        <Route path="/financial-years/:id" element={<FinancialYear />} />
+        <Route
+          path="/financial-years/new"
+          element={
+            <ProtectedRoute>
+              <NewFinancialYear />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/financial-years/:id"
+          element={
+            <ProtectedRoute>
+              <FinancialYear />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
@@ -37,14 +49,6 @@ function App() {
           element={
             <ProtectedRoute>
               <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/financial-years"
-          element={
-            <ProtectedRoute>
-              <FinancialYear />
             </ProtectedRoute>
           }
         />
