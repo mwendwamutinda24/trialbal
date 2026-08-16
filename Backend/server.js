@@ -73,6 +73,10 @@ const AccountSchema = new mongoose.Schema({
 
 // Sensible defaults matching the standard IPSAS school accounts template.
 // A school can still customise voteheads later via the accounts array.
+// NOTE: voteheads must be objects matching VoteheadSchema ({ name, order }),
+// not plain strings — Mongoose can't cast a bare string into an embedded
+// subdocument, which is what previously caused ObjectParameterError on
+// financial year creation.
 const DEFAULT_ACCOUNTS = [
   {
     key: "operations",
@@ -87,7 +91,7 @@ const DEFAULT_ACCOUNTS = [
       "Bank Charges",
       "Repair Maintenance & Improvement(Rmi)",
       "Sundry Creditors",
-    ],
+    ].map((name, order) => ({ name, order })),
   },
   {
     key: "tuition",
@@ -100,7 +104,7 @@ const DEFAULT_ACCOUNTS = [
       "Internal Exams",
       "Bank Charges",
       "Creditors",
-    ],
+    ].map((name, order) => ({ name, order })),
   },
   {
     key: "school-fund",
@@ -120,12 +124,15 @@ const DEFAULT_ACCOUNTS = [
       "NSSF",
       "SHIF",
       "PAYE",
-    ],
+    ].map((name, order) => ({ name, order })),
   },
   {
     key: "infrastructure",
     name: "Infrastructure",
-    voteheads: ["Maintenance & Improvement", "Bank Charges"],
+    voteheads: ["Maintenance & Improvement", "Bank Charges"].map((name, order) => ({
+      name,
+      order,
+    })),
   },
 ];
 
@@ -289,12 +296,18 @@ financialYearsRouter.post("/", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "label, startDate and endDate are required." });
     }
 
+    // Deep-clone the shared DEFAULT_ACCOUNTS array so every financial year
+    // gets its own independent copy. Without this, Mongoose assigns _ids
+    // to the subdocuments in place on save, which would otherwise leak
+    // across every FinancialYear document created from the same reference.
+    const accounts = JSON.parse(JSON.stringify(FinancialYear.DEFAULT_ACCOUNTS));
+
     const year = new FinancialYear({
       school: req.user.id,
       label,
       startDate,
       endDate,
-      accounts: FinancialYear.DEFAULT_ACCOUNTS,
+      accounts,
     });
     await year.save();
     res.status(201).json(year);
