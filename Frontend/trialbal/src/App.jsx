@@ -14,6 +14,11 @@ function App() {
     <Router>
       <Header />
       <Routes>
+        <Routes>
+
+        <Route path="/financial-years/new" element={<NewFinancialYear />} />
+        <Route path="/financial-years/:id" element={<FinancialYear />} />
+
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
