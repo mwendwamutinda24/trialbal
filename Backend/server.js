@@ -18,7 +18,51 @@
  */
 
 const dns = require("dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]); // force Google DNS for SRV lookups
+dns.setServers(["8.8.8.8", "8.8.4.4"]); 
+// Maps each default votehead to a line on the Statement of Financial
+// Performance. Anything not listed here (e.g. a school-added custom
+// votehead) falls into "Other (specify)" rather than being dropped.
+const EXPENDITURE_LINE_MAP = {
+  "Local Travel & Transport (Lt&T)": "Local Travel and Transport",
+  "Electricity Water & Conservancy (Ewc)": "Administration Cost",
+  "Administrative Cost": "Administration Cost",
+  "Activity": "Activity",
+  "Personal Emolument (Salaries)": "Personnel Emoluments",
+  "Medical & Insurance/Nhif": "Medical and Insurance",
+  "Bank Charges": "Bank Charges",
+  "Repair Maintenance & Improvement(Rmi)": "Repairs and Maintenance",
+  "Reference Materials": "Teaching/Learning Materials",
+  "Exercise Books": "Teaching/Learning Materials",
+  "Laboratory Equipment": "Teaching/Learning Materials",
+  "Teaching / Learning Materials": "Teaching/Learning Materials",
+  "Internal Exams": "Other (specify)",
+  "Lunch Programme/Boarding": "Lunch Programme",
+  "Maintenance & Improvement": "Infrastructure Maintenance & Improvement",
+};
+
+// Voteheads that represent balance-sheet movements, not P&L expenditure —
+// excluded from the expenditure notes so creditors/statutory deductions
+// don't get double-counted as spend.
+const BALANCE_SHEET_VOTEHEADS = new Set([
+  "Sundry Creditors", "Creditors", "Fees Prepayments", "Fees Arrears",
+  "NSSF", "SHIF", "PAYE",
+]);
+
+// Each account's capitation/revenue label for the Statement of Financial
+// Performance and Cash Flow "Receipts" section.
+const ACCOUNT_REVENUE_LINE = {
+  operations: "Capitation Grants for Operations",
+  tuition: "Capitation Grants for Tuition",
+  "school-fund": "Students' Fees",
+  infrastructure: "Revenue for Infrastructure",
+};
+const { Document, Packer, Paragraph, HeadingLevel, Table, TableRow, TableCell,
+        TextRun, AlignmentType, WidthType, BorderStyle } = require("docx");
+
+function fmt(n) {
+  const v = Number(n) || 0;
+  return v.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}// force Google DNS for SRV lookups
 
 const express = require("express");
 const cors = require("cors");
