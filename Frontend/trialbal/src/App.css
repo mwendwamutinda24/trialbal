@@ -1,10 +1,527 @@
-/* ---------------------------------------------------------------------------
-   FinancialYear.css — Complete styles for FinancialYear component
-   All classNames use 'fy-' prefix for consistency
-   Improved responsive layout with proper stacking context
---------------------------------------------------------------------------- */
+/* ---- Additional styles for new sections -------------------------------- */
 
-/* ---- reset & base -------------------------------------------------------- */
+/* Overview - Extra fields */
+.fy-info-extra {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.fy-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.fy-info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fy-info-field label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.fy-textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+  background: #fafafa;
+  transition: border 0.15s;
+}
+
+.fy-textarea:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.fy-textarea:disabled {
+  background: #f1f5f9;
+  opacity: 0.6;
+}
+
+.fy-text-input {
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  background: #fafafa;
+  transition: border 0.15s;
+}
+
+.fy-text-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.fy-info-sub-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0.75rem 0 0.5rem 0;
+}
+
+/* ---- Financial Statements ---------------------------------------------- */
+.fy-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.fy-section-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.fy-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+  padding-bottom: 0;
+}
+
+.fy-tab {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.fy-tab:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.fy-tab--active {
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+}
+
+.fy-statement {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.25rem;
+  overflow-x: auto;
+}
+
+.fy-statement-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.fy-statement-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.fy-statement-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  padding: 0.5rem 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fy-statement-table td {
+  padding: 0.375rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.fy-statement-section td {
+  font-weight: 600;
+  color: #0f172a;
+  padding-top: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.fy-statement-subtotal td {
+  font-weight: 600;
+  padding-top: 0.5rem;
+  border-top: 1px solid #cbd5e1;
+}
+
+.fy-statement-total td {
+  font-weight: 700;
+  padding-top: 0.5rem;
+  border-top: 2px solid #0f172a;
+}
+
+.fy-statement-final td {
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-top: 2px solid #4f46e5;
+  background: #eef2ff;
+}
+
+.fy-statement-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+/* ---- IPSAS Report ------------------------------------------------------ */
+.fy-ipsas-section {
+  padding: 1.5rem;
+}
+
+.fy-save-status {
+  font-size: 0.8rem;
+  color: #059669;
+  font-weight: 500;
+}
+
+.fy-ipsas-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+}
+
+.fy-ipsas-body {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.fy-ipsas-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fy-ipsas-nav-item {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 0.8rem;
+  color: #475569;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.fy-ipsas-nav-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.fy-ipsas-nav-item--active {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 500;
+}
+
+.fy-ipsas-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.fy-ipsas-doc {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.fy-ipsas-doc-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 1rem 0;
+}
+
+.fy-ipsas-doc-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fy-ipsas-cover {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.fy-ipsas-school-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1rem 0;
+}
+
+.fy-ipsas-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.fy-ipsas-date {
+  font-size: 1rem;
+  color: #475569;
+  margin: 0 0 0.5rem 0;
+}
+
+.fy-ipsas-standards {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1.5rem 0;
+}
+
+.fy-ipsas-cover-footer {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fy-ipsas-badge {
+  display: inline-block;
+  padding: 0.125rem 0.75rem;
+  background: #f1f5f9;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  color: #475569;
+}
+
+.fy-ipsas-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fy-ipsas-field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.fy-ipsas-empty {
+  color: #94a3b8;
+  font-style: italic;
+  padding: 0.5rem;
+  background: #fafafa;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.fy-ipsas-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+  margin: 0;
+}
+
+.fy-ipsas-note {
+  font-size: 0.85rem;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #4f46e5;
+  margin: 0;
+}
+
+.fy-ipsas-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 0.5rem 0;
+}
+
+.fy-objectives-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.fy-objectives-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  padding: 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fy-objectives-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.fy-objectives-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.fy-projects-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.fy-projects-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  padding: 0.375rem 0.5rem;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.fy-projects-table td {
+  padding: 0.375rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* ---- Trial Balance cell inputs ----------------------------------------- */
+.fy-cell-input {
+  width: 70px;
+  padding: 0.125rem 0.25rem;
+  border: none;
+  background: transparent;
+  text-align: right;
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+
+.fy-cell-input:focus {
+  outline: none;
+  background: #eef2ff;
+  border-radius: 4px;
+}
+
+.fy-account-checkboxes {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.fy-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  color: #475569;
+  cursor: pointer;
+}
+
+.fy-checkbox-label input[type="checkbox"] {
+  accent-color: #4f46e5;
+}
+
+/* ---- Responsive updates ----------------------------------------------- */
+@media (max-width: 768px) {
+  .fy-ipsas-body {
+    flex-direction: column;
+  }
+  .fy-ipsas-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    overflow-x: auto;
+  }
+  .fy-ipsas-nav-item {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+  .fy-info-grid {
+    grid-template-columns: 1fr;
+  }
+  .fy-statement-table {
+    font-size: 0.7rem;
+  }
+  .fy-statement-table th,
+  .fy-statement-table td {
+    padding: 0.25rem;
+  }
+  .fy-statement-summary {
+    grid-template-columns: 1fr;
+  }
+  .fy-ipsas-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .fy-info-extra {
+    grid-template-columns: 1fr;
+  }
+  .fy-objectives-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fy-account-checkboxes {
+    flex-wrap: wrap;
+  }
+  .fy-tabs {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .fy-section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .fy-section-actions {
+    flex-wrap: wrap;
+  }
+  .fy-objectives-summary {
+    grid-template-columns: 1fr;
+  }
+  .fy-cell-input {
+    width: 50px;
+    font-size: 0.7rem;
+  }
+  .fy-ipsas-cover {
+    padding: 1rem 0.5rem;
+  }
+  .fy-ipsas-school-name {
+    font-size: 1.2rem;
+  }
+  .fy-ipsas-title {
+    font-size: 1rem;
+  }
+}
 * {
   box-sizing: border-box;
 }
