@@ -32,6 +32,8 @@ const IconArrowDown = (p) => (<svg {...iconProps} {...p}><path d="M12 5v14" /><p
 const IconScale = (p) => (<svg {...iconProps} {...p}><path d="M12 3v18M7 21h10M6 7l-3 5a3 3 0 0 0 6 0Zm12 0-3 5a3 3 0 0 0 6 0ZM4 7h5M15 7h5" /></svg>);
 const IconWallet = (p) => (<svg {...iconProps} {...p}><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3" /><path d="M3 7v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-3" /><path d="M16 12h4v4h-4a2 2 0 0 1 0-4Z" /></svg>);
 const IconPiggyBank = (p) => (<svg {...iconProps} {...p}><path d="M19 9V6a1 1 0 0 0-1-1h-1l-1-2-2 1a7 7 0 0 0-6 7c0 1 0 2 1 3l-1 3h3l1-1h4l1 1h2l-1-3a5 5 0 0 0 1-4Z" /><circle cx="15" cy="10" r="0.5" fill="currentColor" /></svg>);
+const IconPrinter = (p) => (<svg {...iconProps} {...p}><path d="M6 9V3h12v6" /><path d="M18 9h3v8h-3" /><path d="M6 9H3v8h3" /><path d="M6 15h12v6H6z" /><path d="M9 18h6" /></svg>);
+const IconFilePdf = (p) => (<svg {...iconProps} {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M12 18v-4" /><path d="M12 12h.01" /></svg>);
 
 function formatAmount(n) {
   const value = typeof n === 'number' ? n : 0;
@@ -121,7 +123,7 @@ function ProfileMenu({ user, onEditProfile, onLogOut }) {
   );
 }
 
-function TrialBalanceTable({ rows }) {
+function TrialBalanceTable({ rows, onCellChange }) {
   if (!rows.length) {
     return (
       <div className="fy-empty">
@@ -142,29 +144,64 @@ function TrialBalanceTable({ rows }) {
       <table className="fy-table">
         <thead>
           <tr>
-            <th>Code</th>
-            <th>Account</th>
-            <th>Category</th>
-            <th className="fy-table-num">Debit</th>
-            <th className="fy-table-num">Credit</th>
+            <th>Fund</th>
+            <th>Votehead</th>
+            <th>Note</th>
+            <th className="fy-table-num">Estimates</th>
+            <th className="fy-table-num">DR</th>
+            <th className="fy-table-num">CR</th>
+            <th className="fy-table-num">Adj DR</th>
+            <th className="fy-table-num">Adj CR</th>
+            <th className="fy-table-num">Open Jnl</th>
+            <th className="fy-table-num">Close Jnl</th>
+            <th className="fy-table-num">Final DR</th>
+            <th className="fy-table-num">Final CR</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={r._id || r.accountCode}>
-              <td>{r.accountCode}</td>
-              <td>{r.accountName}</td>
-              <td>{r.category}</td>
-              <td className="fy-table-num">{formatAmount(Number(r.debit) || 0)}</td>
-              <td className="fy-table-num">{formatAmount(Number(r.credit) || 0)}</td>
+          {rows.map((r, idx) => (
+            <tr key={r._id || idx}>
+              <td>{r.accountKey || r.fund || ''}</td>
+              <td>{r.voteheadName || r.accountName || ''}</td>
+              <td>{r.note || ''}</td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-cell-input" value={r.estimates || 0} onChange={(e) => onCellChange?.(idx, 'estimates', e.target.value)} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-cell-input" value={r.debit || 0} onChange={(e) => onCellChange?.(idx, 'debit', e.target.value)} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-cell-input" value={r.credit || 0} onChange={(e) => onCellChange?.(idx, 'credit', e.target.value)} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-cell-input" value={r.adjDr || 0} onChange={(e) => onCellChange?.(idx, 'adjDr', e.target.value)} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-cell-input" value={r.adjCr || 0} onChange={(e) => onCellChange?.(idx, 'adjCr', e.target.value)} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-cell-input" value={r.openJnl || 0} onChange={(e) => onCellChange?.(idx, 'openJnl', e.target.value)} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-cell-input" value={r.closeJnl || 0} onChange={(e) => onCellChange?.(idx, 'closeJnl', e.target.value)} />
+              </td>
+              <td className="fy-table-num">{formatAmount(Number(r.debit || 0) + Number(r.adjDr || 0) + Number(r.openJnl || 0) - Number(r.closeJnl || 0))}</td>
+              <td className="fy-table-num">{formatAmount(Number(r.credit || 0) + Number(r.adjCr || 0))}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr>
             <td colSpan={3}>Totals</td>
+            <td className="fy-table-num">{formatAmount(rows.reduce((s, r) => s + Number(r.estimates || 0), 0))}</td>
             <td className="fy-table-num">{formatAmount(totalDebit)}</td>
             <td className="fy-table-num">{formatAmount(totalCredit)}</td>
+            <td className="fy-table-num">{formatAmount(rows.reduce((s, r) => s + Number(r.adjDr || 0), 0))}</td>
+            <td className="fy-table-num">{formatAmount(rows.reduce((s, r) => s + Number(r.adjCr || 0), 0))}</td>
+            <td className="fy-table-num">{formatAmount(rows.reduce((s, r) => s + Number(r.openJnl || 0), 0))}</td>
+            <td className="fy-table-num">{formatAmount(rows.reduce((s, r) => s + Number(r.closeJnl || 0), 0))}</td>
+            <td className="fy-table-num">{formatAmount(rows.reduce((s, r) => s + Number(r.debit || 0) + Number(r.adjDr || 0) + Number(r.openJnl || 0) - Number(r.closeJnl || 0), 0))}</td>
+            <td className="fy-table-num">{formatAmount(rows.reduce((s, r) => s + Number(r.credit || 0) + Number(r.adjCr || 0), 0))}</td>
           </tr>
         </tfoot>
       </table>
@@ -178,20 +215,831 @@ function TrialBalanceTable({ rows }) {
   );
 }
 
-function SectionPlaceholder({ title, content }) {
+// ---- Overview Section ----------------------------------------------------
+function OverviewSection({ year, totals, inventories, setInventories, isFinalized, handleSaveAdditionalInfo, savingInfo, compareId, setCompareId, compareOptions }) {
+  const totalInventory = Object.values(inventories).reduce((sum, val) => sum + Number(val), 0);
+
+  return (
+    <>
+      <div className="fy-compare">
+        <span>Compare</span>
+        <span className="fy-compare-current">{year.label}</span>
+        <span>with</span>
+        <select
+          className="fy-compare-select"
+          value={compareId}
+          onChange={(e) => setCompareId(e.target.value)}
+        >
+          <option value="">No comparative year</option>
+          {compareOptions.map((y) => (
+            <option key={y._id} value={y._id}>{y.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="fy-stats-grid">
+        <StatCard icon={<IconArrowUp />} tint={{ bg: '#ecfdf5', fg: '#059669' }} label="Total Revenue" value={totals.receipts} />
+        <StatCard icon={<IconArrowDown />} tint={{ bg: '#fef2f2', fg: '#dc2626' }} label="Total Expenses" value={totals.payments} />
+        <StatCard icon={<IconScale />} tint={{ bg: '#eff6ff', fg: '#2563eb' }} label="Surplus / (Deficit)" value={totals.surplus} />
+        <StatCard icon={<IconWallet />} tint={{ bg: '#fffbeb', fg: '#b45309' }} label="Cash & Bank" value={totals.cash} />
+        <StatCard icon={<IconPiggyBank />} tint={{ bg: '#faf5ff', fg: '#7c3aed' }} label="Net Assets" value={totals.netAssets} />
+      </div>
+
+      <p className="fy-hint">Use the sidebar to open the trial balance or drill into a report.</p>
+
+      <div className="fy-info-header">
+        <h3 className="fy-info-title">Additional Information</h3>
+        <button
+          type="button"
+          className="fy-btn fy-btn--primary"
+          onClick={handleSaveAdditionalInfo}
+          disabled={savingInfo}
+        >
+          <IconFileText width={16} height={16} />
+          {savingInfo ? 'Saving…' : 'Save additional information'}
+        </button>
+      </div>
+      <p className="fy-info-sub">
+        School and year-end disclosures from the Additional Information sheet. These feed the Overview and the IPSAS report.
+      </p>
+
+      <div className="fy-info-panel">
+        <h4 className="fy-info-section-title">1) Inventories as at prior year end</h4>
+        <table className="fy-info-table">
+          <thead>
+            <tr>
+              <th>ITEM</th>
+              <th className="fy-table-num">KSHS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DEFAULT_INVENTORY_ITEMS.map((item) => (
+              <tr key={item.key}>
+                <td>{item.label}</td>
+                <td className="fy-table-num">
+                  <input
+                    type="number"
+                    className="fy-info-input"
+                    value={inventories[item.key] ?? 0}
+                    onChange={(e) =>
+                      setInventories((prev) => ({
+                        ...prev,
+                        [item.key]: Number(e.target.value),
+                      }))
+                    }
+                    disabled={isFinalized}
+                  />
+                </td>
+              </tr>
+            ))}
+            <tr className="fy-info-total">
+              <td><strong>Total</strong></td>
+              <td className="fy-table-num"><strong>{formatAmount(totalInventory)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div className="fy-info-extra">
+          <div className="fy-info-field">
+            <label>Provisions (leave)</label>
+            <input type="number" className="fy-info-input" value={inventories.provisions || 0} onChange={(e) => setInventories(prev => ({ ...prev, provisions: Number(e.target.value) }))} disabled={isFinalized} />
+          </div>
+          <div className="fy-info-field">
+            <label>Accrued interest on loan</label>
+            <input type="number" className="fy-info-input" value={inventories.accruedInterest || 0} onChange={(e) => setInventories(prev => ({ ...prev, accruedInterest: Number(e.target.value) }))} disabled={isFinalized} />
+          </div>
+        </div>
+      </div>
+
+      <div className="fy-info-panel">
+        <h4 className="fy-info-section-title">2-4) School type, budgetary assumptions and actual enrolment</h4>
+        <div className="fy-info-grid">
+          <div className="fy-info-field">
+            <label>School type note</label>
+            <textarea className="fy-textarea" placeholder="e.g. The school was a mixed day and Boarding School" disabled={isFinalized} />
+          </div>
+          <div className="fy-info-field">
+            <label>Budgetary assumption</label>
+            <input type="text" className="fy-text-input" placeholder="Mixed School" disabled={isFinalized} />
+          </div>
+          <div className="fy-info-field">
+            <label>Budgeted boarders</label>
+            <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+          </div>
+          <div className="fy-info-field">
+            <label>Budgeted day scholars</label>
+            <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+          </div>
+          <div className="fy-info-field">
+            <label>Budgeted total</label>
+            <input type="number" className="fy-info-input" value={0} disabled />
+          </div>
+          <div className="fy-info-field">
+            <label>Actual boarders</label>
+            <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+          </div>
+          <div className="fy-info-field">
+            <label>Actual day scholars</label>
+            <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+          </div>
+          <div className="fy-info-field">
+            <label>Actual total</label>
+            <input type="number" className="fy-info-input" value={0} disabled />
+          </div>
+        </div>
+      </div>
+
+      <div className="fy-info-panel">
+        <h4 className="fy-info-section-title">5) School Fees Structure</h4>
+        <table className="fy-info-table">
+          <thead>
+            <tr>
+              <th>VOTEHEAD</th>
+              <th className="fy-table-num">BOARDERS</th>
+              <th className="fy-table-num">DAY SCHOLARS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {['Repairs, Maintainance & Improv', 'Activity', 'Boarding, Equipment & Stores/Lunch', 'Lunch programme', 'Other voteheads (It&t, ewc, admcost, Pem)', 'Personal Emoluments', 'Administration Cost', 'Electricity, Water & Conservancy', 'Local Transport and Travelling', 'P.A Development'].map((vh) => (
+              <tr key={vh}>
+                <td>{vh}</td>
+                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="fy-info-panel">
+        <h4 className="fy-info-section-title">6) Capitation Grants per learner</h4>
+        <h5 className="fy-info-sub-title">Tuition Account</h5>
+        <table className="fy-info-table">
+          <thead>
+            <tr>
+              <th>VOTEHEAD</th>
+              <th className="fy-table-num">KSHS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Teaching and Learning Materials</td>
+              <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h5 className="fy-info-sub-title">Operations Account</h5>
+        <table className="fy-info-table">
+          <thead>
+            <tr>
+              <th>VOTEHEAD</th>
+              <th className="fy-table-num">KSHS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {['Personal emoluments', 'Admin costs/Bank charges', 'Local transport / travelling', 'Electricity and water', 'Other Voteheads', 'Maintenance & improvement', 'Medical & Insurance', 'Activity'].map((vh) => (
+              <tr key={vh}>
+                <td>{vh}</td>
+                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="fy-info-panel">
+        <h4 className="fy-info-section-title">7-8) Fee arrears and house rent debtors</h4>
+        <table className="fy-info-table">
+          <thead>
+            <tr>
+              <th>VOTEHEAD</th>
+              <th className="fy-table-num">AMOUNT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {['Repairs, Maintainance & Improv', 'Activity fees', 'Boarding, Equipment & Stores/Lunch', 'Lunch programme', 'Other voteheads (It&t, ewc, admcost, Pem)', 'P.A Development'].map((vh) => (
+              <tr key={vh}>
+                <td>{vh}</td>
+                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+              </tr>
+            ))}
+            <tr className="fy-info-total">
+              <td><strong>Total</strong></td>
+              <td className="fy-table-num"><strong>0.00</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="fy-info-field">
+          <label>House Rent debtors</label>
+          <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+        </div>
+      </div>
+
+      <div className="fy-info-panel">
+        <h4 className="fy-info-section-title">9) Trade Creditors</h4>
+        <table className="fy-info-table">
+          <thead>
+            <tr>
+              <th>VOTEHEAD</th>
+              <th className="fy-table-num">BOARDING ACCOUNT</th>
+              <th className="fy-table-num">TUITION ACCOUNT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {['Repairs, Maintainance & Improv', 'Boarding, Equipment & Stores/Lunch', 'Administration Cost', 'Electricity, Water & Conservancy', 'Laboratory Equipments'].map((vh) => (
+              <tr key={vh}>
+                <td>{vh}</td>
+                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="fy-info-panel">
+        <h4 className="fy-info-section-title">10) Inventories as at year end</h4>
+        <table className="fy-info-table">
+          <thead>
+            <tr>
+              <th>ITEM</th>
+              <th className="fy-table-num">PURCHASE COST</th>
+              <th className="fy-table-num">REPLACEMENT COST</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              'Food Stuffs - BES (School Fund)',
+              'Stationery - TLM (Tuition)',
+              'Laboratory Chemicals - TLM (Tuition)',
+              'Pharmaceutical - Medical and Insurance (Operations)',
+              'Cleaning Materials - BES (School Fund)'
+            ].map((item) => (
+              <tr key={item}>
+                <td>{item}</td>
+                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="fy-info-panel">
+        <h4 className="fy-info-section-title">11-14) Narrative disclosures</h4>
+        <div className="fy-info-field">
+          <label>Dormant accounts / other cash notes</label>
+          <textarea className="fy-textarea" placeholder="Enter details about dormant accounts..." disabled={isFinalized} />
+        </div>
+        <div className="fy-info-field">
+          <label>Prepaid insurance / other prepayments</label>
+          <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+        </div>
+        <div className="fy-info-field">
+          <label>Fixed deposit interest</label>
+          <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+        </div>
+        <div className="fy-info-field">
+          <label>Assets budgeted and charged under BES</label>
+          <textarea className="fy-textarea" placeholder="Enter details..." disabled={isFinalized} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ---- Financial Statements Section ---------------------------------------
+function FinancialStatementsSection({ year, totals, compareId, compareOptions }) {
+  const [activeTab, setActiveTab] = useState('performance');
+
+  const tabs = [
+    { key: 'performance', label: 'Financial Performance' },
+    { key: 'position', label: 'Financial Position' },
+    { key: 'changes', label: 'Changes in Net Assets' },
+    { key: 'cashflow', label: 'Cashflow Statement' },
+    { key: 'budget', label: 'Budgeted vs Actual' },
+  ];
+
   return (
     <div className="fy-section">
-      <h3 className="fy-section-title">{title}</h3>
-      <p className="fy-section-sub">This section is ready for data entry.</p>
-      <div className="fy-section-content">
-        <span className="fy-section-icon">📋</span>
-        <p>{content || `Start adding ${title.toLowerCase()} data here.`}</p>
+      <div className="fy-section-header">
+        <h3 className="fy-section-title">Financial Statements</h3>
+        <div className="fy-section-actions">
+          <button className="fy-btn"><IconPrinter width={16} height={16} /> Print</button>
+          <button className="fy-btn"><IconFilePdf width={16} height={16} /> Export PDF</button>
+        </div>
+      </div>
+
+      <div className="fy-tabs">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            className={`fy-tab ${activeTab === tab.key ? 'fy-tab--active' : ''}`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'performance' && (
+        <div className="fy-statement">
+          <h4 className="fy-statement-title">Statement of Financial Performance for the Year Ended {year.endDate ? new Date(year.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : ''}</h4>
+          <table className="fy-statement-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th className="fy-table-num">Note</th>
+                <th className="fy-table-num">CURRENT FY (KSHS)</th>
+                <th className="fy-table-num">COMPARATIVE FY (KSHS)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="fy-statement-section">
+                <td colSpan={4}><strong>Revenue from non-exchange transactions</strong></td>
+              </tr>
+              {[
+                { label: 'Capitation Grants for Tuition', note: 1 },
+                { label: 'Capitation Grants for Operations', note: 2 },
+                { label: 'Revenue for Infrastructure', note: 3 },
+                { label: 'Capitation grants for Special Needs', note: 4 },
+                { label: 'Grants from Donors and Development Partners', note: 5 },
+                { label: 'Transfers from Other Government Entities', note: 6 },
+                { label: 'Contributions and Donations', note: 7 },
+              ].map((item) => (
+                <tr key={item.label}>
+                  <td>{item.label}</td>
+                  <td className="fy-table-num">{item.note}</td>
+                  <td className="fy-table-num">0.00</td>
+                  <td className="fy-table-num">0.00</td>
+                </tr>
+              ))}
+              <tr className="fy-statement-subtotal">
+                <td colSpan={2}><strong>Total — non-exchange</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+              </tr>
+
+              <tr className="fy-statement-section">
+                <td colSpan={4}><strong>Revenue from Exchange transactions</strong></td>
+              </tr>
+              {[
+                { label: 'Parents contributions / School fund', note: 8 },
+                { label: 'Miscellaneous Revenue', note: 9 },
+                { label: 'Finance Income', note: 10 },
+              ].map((item) => (
+                <tr key={item.label}>
+                  <td>{item.label}</td>
+                  <td className="fy-table-num">{item.note}</td>
+                  <td className="fy-table-num">0.00</td>
+                  <td className="fy-table-num">0.00</td>
+                </tr>
+              ))}
+              <tr className="fy-statement-subtotal">
+                <td colSpan={2}><strong>Total — exchange</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+              </tr>
+
+              <tr className="fy-statement-total">
+                <td colSpan={2}><strong>Total Revenue</strong></td>
+                <td className="fy-table-num"><strong>{formatAmount(totals.receipts)}</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+              </tr>
+
+              <tr className="fy-statement-section">
+                <td colSpan={4}><strong>Expenses</strong></td>
+              </tr>
+              {[
+                { label: 'Expenditure for Tuition', note: 11 },
+                { label: 'Expenditure for Operations', note: 12 },
+                { label: 'Expenditure for Special Needs', note: 13 },
+                { label: 'Expenditure for Boarding and School Fund', note: 14 },
+                { label: 'Depreciation and Amortization expense', note: 15 },
+                { label: 'Finance Costs', note: 16 },
+              ].map((item) => (
+                <tr key={item.label}>
+                  <td>{item.label}</td>
+                  <td className="fy-table-num">{item.note}</td>
+                  <td className="fy-table-num">0.00</td>
+                  <td className="fy-table-num">0.00</td>
+                </tr>
+              ))}
+              <tr className="fy-statement-total">
+                <td colSpan={2}><strong>Total Expenses</strong></td>
+                <td className="fy-table-num"><strong>{formatAmount(totals.payments)}</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+              </tr>
+
+              <tr className="fy-statement-section">
+                <td colSpan={4}><strong>Other Gains (Losses)</strong></td>
+              </tr>
+              {[
+                { label: 'Gain/Loss on Disposal of Assets', note: 17 },
+                { label: 'Gain/(loss) on Fair Value Investments', note: 18 },
+                { label: 'Impairment Loss', note: 19 },
+              ].map((item) => (
+                <tr key={item.label}>
+                  <td>{item.label}</td>
+                  <td className="fy-table-num">{item.note}</td>
+                  <td className="fy-table-num">0.00</td>
+                  <td className="fy-table-num">0.00</td>
+                </tr>
+              ))}
+              <tr className="fy-statement-subtotal">
+                <td colSpan={2}><strong>Total Other Gains/(Losses)</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+              </tr>
+
+              <tr className="fy-statement-total fy-statement-final">
+                <td colSpan={2}><strong>Net surplus/Deficit for the Year</strong></td>
+                <td className="fy-table-num"><strong>{formatAmount(totals.surplus)}</strong></td>
+                <td className="fy-table-num"><strong>0.00</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {activeTab === 'position' && (
+        <div className="fy-statement">
+          <h4 className="fy-statement-title">Statement of Financial Position</h4>
+          <div className="fy-statement-summary">
+            <div className="fy-summary-item">
+              <span className="fy-summary-label">Total Assets</span>
+              <span className="fy-summary-value">0.00</span>
+            </div>
+            <div className="fy-summary-item">
+              <span className="fy-summary-label">Total Liabilities</span>
+              <span className="fy-summary-value">0.00</span>
+            </div>
+            <div className="fy-summary-item">
+              <span className="fy-summary-label">Net Assets</span>
+              <span className="fy-summary-value">{formatAmount(totals.netAssets)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'changes' && (
+        <div className="fy-statement">
+          <h4 className="fy-statement-title">Changes in Net Assets</h4>
+          <div className="fy-empty">
+            <p className="fy-empty-title">Statement of Changes in Net Assets</p>
+            <p className="fy-empty-sub">Coming soon based on the financial data.</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'cashflow' && (
+        <div className="fy-statement">
+          <h4 className="fy-statement-title">Cashflow Statement</h4>
+          <div className="fy-empty">
+            <p className="fy-empty-title">Cashflow Statement</p>
+            <p className="fy-empty-sub">Coming soon based on the financial data.</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'budget' && (
+        <div className="fy-statement">
+          <h4 className="fy-statement-title">Budgeted vs Actual</h4>
+          <div className="fy-empty">
+            <p className="fy-empty-title">Budget vs Actual Comparison</p>
+            <p className="fy-empty-sub">Coming soon based on the financial data.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- IPSAS Report Section -----------------------------------------------
+function IpsasReportSection({ year, school }) {
+  const [docSection, setDocSection] = useState('cover');
+  const [saveStatus, setSaveStatus] = useState('');
+
+  const documentSections = [
+    { key: 'cover', label: 'Cover' },
+    { key: 'who-we-are', label: '3. Who we are' },
+    { key: 'chairman', label: "4. Chairman's Statement" },
+    { key: 'principal', label: "5. Principal's Statement" },
+    { key: 'objectives', label: '6. Predetermined Objectives' },
+    { key: 'management', label: '7. Management Discussion' },
+    { key: 'bom', label: '8. BoM Responsibilities' },
+    { key: 'auditor', label: '10. Auditor-General' },
+    { key: 'financial-statements', label: '11-16. Financial Statements' },
+    { key: 'notes', label: '17. Notes' },
+    { key: 'annexes', label: '18. Annexes' },
+  ];
+
+  const handleSave = () => {
+    setSaveStatus('Saving...');
+    setTimeout(() => setSaveStatus('Saved ✓'), 1500);
+  };
+
+  return (
+    <div className="fy-section fy-ipsas-section">
+      <div className="fy-section-header">
+        <h3 className="fy-section-title">IPSAS Annual Report</h3>
+        <div className="fy-section-actions">
+          <button className="fy-btn fy-btn--primary" onClick={handleSave}>
+            <IconFileText width={16} height={16} /> Save
+          </button>
+          <button className="fy-btn"><IconPrinter width={16} height={16} /> Export PDF</button>
+          <button className="fy-btn"><IconDownload width={16} height={16} /> Export Word</button>
+        </div>
+        {saveStatus && <span className="fy-save-status">{saveStatus}</span>}
+      </div>
+
+      <p className="fy-ipsas-sub">
+        Official template sections. Yellow fields are written here; blue sections come from this year's data. 
+        Statements compare {year.label} with None selected.
+      </p>
+
+      <div className="fy-compare">
+        <span>Comparative financial year (second column on statements and notes)</span>
+        <select className="fy-compare-select">
+          <option value="">No comparative year</option>
+        </select>
+      </div>
+
+      <div className="fy-ipsas-body">
+        <aside className="fy-ipsas-sidebar">
+          {documentSections.map((section) => (
+            <button
+              key={section.key}
+              className={`fy-ipsas-nav-item ${docSection === section.key ? 'fy-ipsas-nav-item--active' : ''}`}
+              onClick={() => setDocSection(section.key)}
+            >
+              {section.label}
+            </button>
+          ))}
+        </aside>
+
+        <main className="fy-ipsas-content">
+          {docSection === 'cover' && (
+            <div className="fy-ipsas-doc">
+              <div className="fy-ipsas-cover">
+                <h1 className="fy-ipsas-school-name">{school?.name || 'School Name'}</h1>
+                <h2 className="fy-ipsas-title">ANNUAL REPORT AND FINANCIAL STATEMENTS</h2>
+                <p className="fy-ipsas-date">FOR THE FINANCIAL YEAR ENDED {year.endDate ? new Date(year.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-') : '2027-06-30'}</p>
+                <p className="fy-ipsas-standards">Prepared in accordance with the Accrual Basis of Accounting under IPSAS</p>
+                <div className="fy-ipsas-cover-footer">
+                  <span className="fy-ipsas-badge">Cover</span>
+                  <span className="fy-ipsas-badge">Auto-filled</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'who-we-are' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">3. Who we are</h3>
+              <div className="fy-ipsas-doc-content">
+                <p><strong>{school?.name || 'Stephen Kanja hybrid school'}</strong> is domiciled in Kenya. Its operations are governed under the Basic Education Act, 2013. It is in {school?.county || 'Kwale'} County, {school?.subCounty || 'Matuga'} Sub-County. Registration number {school?.regNumber || '022222'}. School type: {school?.schoolType || 'mixed'}.</p>
+                <p>Contacts, board members and bankers are taken from School Profile and School Accounts.</p>
+                
+                <div className="fy-ipsas-field">
+                  <label>Board of Management</label>
+                  <div className="fy-ipsas-empty">None added yet.</div>
+                </div>
+                
+                <div className="fy-ipsas-field">
+                  <label>School bankers</label>
+                  <div className="fy-ipsas-empty">None added yet.</div>
+                </div>
+                
+                <div className="fy-ipsas-field">
+                  <label>Entity activities, mandate, vision and mission</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={4} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'chairman' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">4. Chairman's Statement</h3>
+              <div className="fy-ipsas-doc-content">
+                <div className="fy-ipsas-field">
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={10} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'principal' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">5. Principal's Statement</h3>
+              <div className="fy-ipsas-doc-content">
+                <p className="fy-ipsas-hint">Two to three pages</p>
+                <div className="fy-ipsas-field">
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={10} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'objectives' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">6. Statement of Performance against Predetermined Objectives</h3>
+              <div className="fy-ipsas-doc-content">
+                <table className="fy-objectives-table">
+                  <thead>
+                    <tr>
+                      <th>OBJECTIVE</th>
+                      <th>KPI</th>
+                      <th>TARGET</th>
+                      <th>ACHIEVEMENT</th>
+                      <th>REMARKS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colSpan={5} className="fy-ipsas-empty">None yet.</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <button className="fy-btn">+ Add Objective</button>
+
+                <div className="fy-objectives-summary">
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">FY</span>
+                    <span className="fy-summary-value">{year.label}</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">REVENUE</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">EXPENSES</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">SURPLUS/(DEFICIT)</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">CASH & BANK</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'management' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">7. Management Discussion and Analysis</h3>
+              <div className="fy-ipsas-doc-content">
+                <div className="fy-ipsas-field">
+                  <label>Financial performance commentary</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={4} />
+                </div>
+                <div className="fy-ipsas-field">
+                  <label>Teacher-student ratio</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={3} />
+                </div>
+                <div className="fy-ipsas-field">
+                  <label>Non-teaching staff establishment</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={3} />
+                </div>
+                <div className="fy-ipsas-field">
+                  <label>KCSE mean score and candidates (last three years)</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={3} />
+                </div>
+                <div className="fy-ipsas-field">
+                  <label>Capacity of the school</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={3} />
+                </div>
+                <div className="fy-ipsas-field">
+                  <label>Development projects</label>
+                  <table className="fy-projects-table">
+                    <thead>
+                      <tr>
+                        <th>PROJECT</th>
+                        <th>SOURCE OF FUNDS</th>
+                        <th>STATUS</th>
+                        <th>INITIAL COST</th>
+                        <th>AMOUNT SPENT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colSpan={5} className="fy-ipsas-empty">No records yet.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <button className="fy-btn">+ Add Project</button>
+                </div>
+                <div className="fy-ipsas-field">
+                  <label>Other necessary information</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={3} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'bom' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">8. Statement of Board of Management Responsibilities</h3>
+              <div className="fy-ipsas-doc-content">
+                <div className="fy-ipsas-field">
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={8} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'auditor' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">10. Report of the Auditor General</h3>
+              <div className="fy-ipsas-doc-content">
+                <p className="fy-ipsas-note">
+                  Completed by the Office of the Auditor-General after audit — not generated by this system.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'financial-statements' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">11-16. Financial statements</h3>
+              <div className="fy-ipsas-doc-content">
+                <p className="fy-ipsas-note">
+                  These figures follow the year comparison selected above. Open Financial Statements in the sidebar for the full tables.
+                </p>
+                <div className="fy-ipsas-summary-grid">
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">Financial Performance</span>
+                    <span className="fy-summary-value">{year.label} vs None selected</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">Total Revenue</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">Total Expenses</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">Surplus / (Deficit)</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                </div>
+                <div className="fy-ipsas-summary-grid">
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">Financial Position</span>
+                    <span className="fy-summary-value">Total Assets: 0.00</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">Total Liabilities</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                  <div className="fy-summary-item">
+                    <span className="fy-summary-label">Net Assets</span>
+                    <span className="fy-summary-value">0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'notes' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">17. Notes</h3>
+              <div className="fy-ipsas-doc-content">
+                <p className="fy-ipsas-note">Notes to the financial statements will appear here based on the data entered.</p>
+                <div className="fy-ipsas-field">
+                  <label>Significant accounting policies</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed — write this section here..." rows={4} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {docSection === 'annexes' && (
+            <div className="fy-ipsas-doc">
+              <h3 className="fy-ipsas-doc-title">18. Annexes</h3>
+              <div className="fy-ipsas-doc-content">
+                <p className="fy-ipsas-note">Annexes will appear here based on the data entered.</p>
+                <div className="fy-ipsas-field">
+                  <label>Annex 1</label>
+                  <textarea className="fy-textarea" placeholder="Not yet completed..." rows={3} />
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );
 }
 
-// ---- page ------------------------------------------------------------------
+// ---- Page Component -----------------------------------------------------
 function FinancialYear() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -248,7 +1096,7 @@ function FinancialYear() {
           ? me.principalName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
           : '??';
 
-        setSchool({ name: me.schoolName, county: me.county });
+        setSchool({ name: me.schoolName, county: me.county, subCounty: me.subCounty, regNumber: me.regNumber, schoolType: me.schoolType });
         setUser({ name: me.principalName, role: 'Principal', initials });
         setYear(yearData);
         setRows(Array.isArray(tbData) ? tbData : tbData.rows || []);
@@ -387,6 +1235,12 @@ function FinancialYear() {
     }
   }
 
+  const handleCellChange = (idx, field, value) => {
+    const updated = [...rows];
+    updated[idx] = { ...updated[idx], [field]: Number(value) || 0 };
+    setRows(updated);
+  };
+
   if (loading) {
     return (
       <div className="fy-loading">
@@ -407,7 +1261,6 @@ function FinancialYear() {
   const totals = year.totals || { receipts: 0, payments: 0, surplus: 0, cash: 0, netAssets: 0 };
   const isFinalized = year.status === 'finalized';
   const compareOptions = allYears.filter((y) => y._id !== id);
-  const totalInventory = Object.values(inventories).reduce((sum, val) => sum + Number(val), 0);
 
   return (
     <div className={`fy-page ${sidebarCollapsed ? 'fy-page--collapsed' : ''}`}>
@@ -490,108 +1343,48 @@ function FinancialYear() {
           {error && <p className="fy-error">{error}</p>}
 
           {activeSection === 'overview' && (
-            <>
-              <div className="fy-compare">
-                <span>Compare</span>
-                <span className="fy-compare-current">{year.label}</span>
-                <span>with</span>
-                <select
-                  className="fy-compare-select"
-                  value={compareId}
-                  onChange={(e) => setCompareId(e.target.value)}
-                >
-                  <option value="">No comparative year</option>
-                  {compareOptions.map((y) => (
-                    <option key={y._id} value={y._id}>{y.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="fy-stats-grid">
-                <StatCard icon={<IconArrowUp />} tint={{ bg: '#ecfdf5', fg: '#059669' }} label="Total Revenue" value={totals.receipts} />
-                <StatCard icon={<IconArrowDown />} tint={{ bg: '#fef2f2', fg: '#dc2626' }} label="Total Expenses" value={totals.payments} />
-                <StatCard icon={<IconScale />} tint={{ bg: '#eff6ff', fg: '#2563eb' }} label="Surplus / (Deficit)" value={totals.surplus} />
-                <StatCard icon={<IconWallet />} tint={{ bg: '#fffbeb', fg: '#b45309' }} label="Cash & Bank" value={totals.cash} />
-                <StatCard icon={<IconPiggyBank />} tint={{ bg: '#faf5ff', fg: '#7c3aed' }} label="Net Assets" value={totals.netAssets} />
-              </div>
-
-              <p className="fy-hint">Use the sidebar to open the trial balance or drill into a report.</p>
-
-              <div className="fy-info-header">
-                <h3 className="fy-info-title">Additional Information</h3>
-                <button
-                  type="button"
-                  className="fy-btn fy-btn--primary"
-                  onClick={handleSaveAdditionalInfo}
-                  disabled={savingInfo}
-                >
-                  <IconFileText width={16} height={16} />
-                  {savingInfo ? 'Saving…' : 'Save additional information'}
-                </button>
-              </div>
-              <p className="fy-info-sub">
-                School and year-end disclosures from the Additional Information sheet. These feed the Overview and the IPSAS report.
-              </p>
-
-              <div className="fy-info-panel">
-                <h4 className="fy-info-section-title">1) Inventories as at prior year end</h4>
-                <table className="fy-info-table">
-                  <thead>
-                    <tr>
-                      <th>ITEM</th>
-                      <th className="fy-table-num">KSHS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {DEFAULT_INVENTORY_ITEMS.map((item) => (
-                      <tr key={item.key}>
-                        <td>{item.label}</td>
-                        <td className="fy-table-num">
-                          <input
-                            type="number"
-                            className="fy-info-input"
-                            value={inventories[item.key] ?? 0}
-                            onChange={(e) =>
-                              setInventories((prev) => ({
-                                ...prev,
-                                [item.key]: Number(e.target.value),
-                              }))
-                            }
-                            disabled={isFinalized}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="fy-info-total">
-                      <td><strong>Total</strong></td>
-                      <td className="fy-table-num"><strong>{formatAmount(totalInventory)}</strong></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </>
+            <OverviewSection
+              year={year}
+              totals={totals}
+              inventories={inventories}
+              setInventories={setInventories}
+              isFinalized={isFinalized}
+              handleSaveAdditionalInfo={handleSaveAdditionalInfo}
+              savingInfo={savingInfo}
+              compareId={compareId}
+              setCompareId={setCompareId}
+              compareOptions={compareOptions}
+            />
           )}
 
           {activeSection === 'trial-balance' && (
             <div className="fy-panel">
               <div className="fy-panel-header">
                 <div>
-                  <h3 className="fy-panel-title">Trial Balance</h3>
-                  <p className="fy-panel-sub">Upload an Excel file or download the current data.</p>
+                  <h3 className="fy-panel-title">Trial Balance — school accounts</h3>
+                  <p className="fy-panel-sub">
+                    Choose the school accounts you want, then download one combined workbook. Columns match the official Excel: Approved Estimates, extract DR/CR, Adjustments DR/CR, Opening Journal, Closing Journal, and Final TB.
+                  </p>
                 </div>
 
                 <div className="fy-tb-actions">
+                  <div className="fy-account-checkboxes">
+                    {['Operations', 'Tuition', 'Boarding', 'Infrastructure'].map((acc) => (
+                      <label key={acc} className="fy-checkbox-label">
+                        <input type="checkbox" defaultChecked /> {acc}
+                      </label>
+                    ))}
+                  </div>
                   <button type="button" className="fy-btn" onClick={handleDownload}>
-                    <IconDownload width={16} height={16} /> Download
+                    <IconDownload width={16} height={16} /> Download combined template (.xlsx)
                   </button>
                   <button
                     type="button"
                     className="fy-btn fy-btn--primary"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading || isFinalized}
-                    title={isFinalized ? 'Unlock the year to upload a new trial balance' : undefined}
                   >
-                    <IconUpload width={16} height={16} /> {uploading ? 'Uploading…' : 'Upload Excel'}
+                    <IconUpload width={16} height={16} /> {uploading ? 'Uploading…' : 'Upload'}
                   </button>
                   <input
                     ref={fileInputRef}
@@ -603,16 +1396,66 @@ function FinancialYear() {
                 </div>
               </div>
 
-              <TrialBalanceTable rows={rows} />
+              <TrialBalanceTable rows={rows} onCellChange={handleCellChange} />
             </div>
           )}
 
-          {activeSection === 'notes' && <SectionPlaceholder title="Notes" content="Add narrative disclosures and notes to the financial statements." />}
-          {activeSection === 'cash-bank' && <SectionPlaceholder title="Cash and Bank" content="Manage cash and bank account balances and transactions." />}
-          {activeSection === 'receivables' && <SectionPlaceholder title="Receivables" content="Track amounts owed to the school from debtors and other entities." />}
-          {activeSection === 'payables' && <SectionPlaceholder title="Payables" content="Manage creditors, suppliers, and other amounts owed by the school." />}
-          {activeSection === 'financial-statements' && <SectionPlaceholder title="Financial Statements" content="View and prepare the complete set of financial statements." />}
-          {activeSection === 'ipsas-report' && <SectionPlaceholder title="IPSAS Report" content="Generate the full IPSAS-compliant annual report and financial statements." />}
+          {activeSection === 'notes' && (
+            <div className="fy-section">
+              <h3 className="fy-section-title">Notes</h3>
+              <p className="fy-section-sub">Add narrative disclosures and notes to the financial statements.</p>
+              <div className="fy-section-content">
+                <span className="fy-section-icon">📝</span>
+                <p>Notes to the financial statements will appear here based on the data entered.</p>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'cash-bank' && (
+            <div className="fy-section">
+              <h3 className="fy-section-title">Cash and Bank</h3>
+              <p className="fy-section-sub">Manage cash and bank account balances and transactions.</p>
+              <div className="fy-section-content">
+                <span className="fy-section-icon">💰</span>
+                <p>Cash and bank balances will appear here based on the financial data.</p>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'receivables' && (
+            <div className="fy-section">
+              <h3 className="fy-section-title">Receivables</h3>
+              <p className="fy-section-sub">Track amounts owed to the school from debtors and other entities.</p>
+              <div className="fy-section-content">
+                <span className="fy-section-icon">📋</span>
+                <p>Receivables will appear here based on the financial data.</p>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'payables' && (
+            <div className="fy-section">
+              <h3 className="fy-section-title">Payables</h3>
+              <p className="fy-section-sub">Manage creditors, suppliers, and other amounts owed by the school.</p>
+              <div className="fy-section-content">
+                <span className="fy-section-icon">📊</span>
+                <p>Payables will appear here based on the financial data.</p>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'financial-statements' && (
+            <FinancialStatementsSection
+              year={year}
+              totals={totals}
+              compareId={compareId}
+              compareOptions={compareOptions}
+            />
+          )}
+
+          {activeSection === 'ipsas-report' && (
+            <IpsasReportSection year={year} school={school} />
+          )}
         </main>
       </div>
     </div>
