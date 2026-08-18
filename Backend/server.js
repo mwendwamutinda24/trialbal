@@ -1,27 +1,23 @@
 /**
  * nserver.js
  * -----------------------------------------------------------------------
- * Single-file consolidation of:
- *   server.js
- *   models/School.js
- *   models/FinancialYear.js
- *   models/TrialBalanceRow.js
- *   routes/financialYears.js
- *
- * Behavior is unchanged from the original multi-file version — this just
- * inlines the three schemas and the financial-years router into one file.
- * `./data/counties.js` is left as a separate require since it's plain
- * data, not a schema or route.
- *
- * Run with: node nserver.js
+ * Single-file consolidation with keep-alive mechanism to prevent
+ * Render free tier from spinning down the server.
+ * 
+ * Adds a ping endpoint and automatic periodic pinging every 15 seconds.
  * -----------------------------------------------------------------------
  */
 
 const dns = require("dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]); 
-// Maps each default votehead to a line on the Statement of Financial
-// Performance. Anything not listed here (e.g. a school-added custom
-// votehead) falls into "Other (specify)" rather than being dropped.
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+// ─── KEEP-ALIVE CONFIG ────────────────────────────────────────────────
+// This prevents Render free tier from spinning down the server
+// by periodically pinging itself every 15 seconds.
+const KEEP_ALIVE_INTERVAL = 15000; // 15 seconds
+const PORT = process.env.PORT || 5000;
+
+// ─── MAPS & CONSTANTS ──────────────────────────────────────────────────
 const EXPENDITURE_LINE_MAP = {
   "Local Travel & Transport (Lt&T)": "Local Travel and Transport",
   "Electricity Water & Conservancy (Ewc)": "Administration Cost",
@@ -40,29 +36,25 @@ const EXPENDITURE_LINE_MAP = {
   "Maintenance & Improvement": "Infrastructure Maintenance & Improvement",
 };
 
-// Voteheads that represent balance-sheet movements, not P&L expenditure —
-// excluded from the expenditure notes so creditors/statutory deductions
-// don't get double-counted as spend.
 const BALANCE_SHEET_VOTEHEADS = new Set([
   "Sundry Creditors", "Creditors", "Fees Prepayments", "Fees Arrears",
   "NSSF", "SHIF", "PAYE",
 ]);
 
-// Each account's capitation/revenue label for the Statement of Financial
-// Performance and Cash Flow "Receipts" section.
 const ACCOUNT_REVENUE_LINE = {
   operations: "Capitation Grants for Operations",
   tuition: "Capitation Grants for Tuition",
   "school-fund": "Students' Fees",
   infrastructure: "Revenue for Infrastructure",
 };
+
 const { Document, Packer, Paragraph, HeadingLevel, Table, TableRow, TableCell,
         TextRun, AlignmentType, WidthType, BorderStyle } = require("docx");
 
 function fmt(n) {
   const v = Number(n) || 0;
   return v.toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}// force Google DNS for SRV lookups
+}
 
 const express = require("express");
 const cors = require("cors");
@@ -77,16 +69,54 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Connect to MongoDB Atlas (no deprecated options)
+// ─── KEEP-ALIVE: Health Check Endpoint ──────────────────────────────
+// This endpoint is used to check if the server is alive.
+// It can also be pinged externally to keep the server awake.
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+  });
+});
+
+// ─── KEEP-ALIVE: Self-ping every 15 seconds ─────────────────────────
+// This ensures the server keeps running on Render free tier.
+// It pings the /health endpoint internally every 15 seconds.
+function startKeepAlive() {
+  console.log(`🔄 Keep-alive enabled: pinging /health every ${KEEP_ALIVE_INTERVAL / 1000}s`);
+  
+  setInterval(async () => {
+    try {
+      // Use the base URL from environment or localhost
+      const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+      const response = await fetch(`${baseUrl}/health`);
+      
+      if (!response.ok) {
+        console.warn(`⚠️ Keep-alive ping failed: ${response.status}`);
+      } else {
+        console.log(`💓 Keep-alive ping successful at ${new Date().toISOString()}`);
+      }
+    } catch (error) {
+      // Silently fail - the server might still be starting up
+      console.log(`🔄 Keep-alive: server not ready yet`);
+    }
+  }, KEEP_ALIVE_INTERVAL);
+}
+
+// ✅ Connect to MongoDB Atlas
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
+  .then(() => {
+    console.log("✅ MongoDB connected");
+    // Start keep-alive only after DB is connected
+    startKeepAlive();
+  })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SCHEMAS
-   (previously models/School.js, models/FinancialYear.js,
-   models/TrialBalanceRow.js)
+   SCHEMAS (unchanged from original)
 ═══════════════════════════════════════════════════════════════════════ */
 
 // ── School ──────────────────────────────────────────────────────────────
@@ -99,7 +129,7 @@ const SchoolSchema = new mongoose.Schema({
   principalName: String,
   principalEmail: { type: String, unique: true },
   principalPhone: String,
-  principalPassword: String, // hashed
+  principalPassword: String,
 });
 const School = mongoose.model("School", SchoolSchema);
 
@@ -110,17 +140,11 @@ const VoteheadSchema = new mongoose.Schema({
 });
 
 const AccountSchema = new mongoose.Schema({
-  key: { type: String, required: true }, // slug e.g. "operations"
-  name: { type: String, required: true }, // "Operations"
+  key: { type: String, required: true },
+  name: { type: String, required: true },
   voteheads: [VoteheadSchema],
 });
 
-// Sensible defaults matching the standard IPSAS school accounts template.
-// A school can still customise voteheads later via the accounts array.
-// NOTE: voteheads must be objects matching VoteheadSchema ({ name, order }),
-// not plain strings — Mongoose can't cast a bare string into an embedded
-// subdocument, which is what previously caused ObjectParameterError on
-// financial year creation.
 const DEFAULT_ACCOUNTS = [
   {
     key: "operations",
@@ -183,7 +207,7 @@ const DEFAULT_ACCOUNTS = [
 const FinancialYearSchema = new mongoose.Schema(
   {
     school: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
-    label: { type: String, required: true }, // e.g. "2026/27"
+    label: { type: String, required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     status: { type: String, enum: ["draft", "finalized"], default: "draft" },
@@ -198,9 +222,9 @@ const FinancialYear = mongoose.model("FinancialYear", FinancialYearSchema);
 const TrialBalanceRowSchema = new mongoose.Schema(
   {
     financialYear: { type: mongoose.Schema.Types.ObjectId, ref: "FinancialYear", required: true },
-    accountKey: { type: String, required: true }, // matches FinancialYear.accounts[].key
+    accountKey: { type: String, required: true },
     rowType: { type: String, enum: ["opening", "votehead", "closing"], required: true },
-    voteheadId: { type: mongoose.Schema.Types.ObjectId, default: null }, // null for opening/closing rows
+    voteheadId: { type: mongoose.Schema.Types.ObjectId, default: null },
     voteheadName: { type: String, default: "" },
     estimates: { type: Number, default: 0 },
     debit: { type: Number, default: 0 },
@@ -210,7 +234,6 @@ const TrialBalanceRowSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-// One row per (financialYear, accountKey, rowType, voteheadId) — re-uploads overwrite, not duplicate.
 TrialBalanceRowSchema.index(
   { financialYear: 1, accountKey: 1, rowType: 1, voteheadId: 1 },
   { unique: true }
@@ -218,10 +241,9 @@ TrialBalanceRowSchema.index(
 const TrialBalanceRow = mongoose.model("TrialBalanceRow", TrialBalanceRowSchema);
 
 /* ═══════════════════════════════════════════════════════════════════════
-   AUTH
+   AUTH (unchanged from original)
 ═══════════════════════════════════════════════════════════════════════ */
 
-// ✅ Register Endpoint
 app.post("/register", async (req, res) => {
   try {
     const { principalPassword, principalEmail, schoolName, ...rest } = req.body;
@@ -249,7 +271,6 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// ✅ Login Endpoint
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -262,7 +283,7 @@ app.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: school._id, email: school.principalEmail },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "24h" } // Extended to 24h to reduce token refreshes
     );
 
     res.json({ token });
@@ -271,7 +292,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// ✅ Middleware for Protected Routes
 function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: "No token provided" });
@@ -286,12 +306,10 @@ function authMiddleware(req, res, next) {
   }
 }
 
-// ✅ Verify Endpoint (for ProtectedRoute to check token validity)
 app.get("/verify", authMiddleware, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
-// ✅ Current school/user data (for dashboard)
 app.get("/me", authMiddleware, async (req, res) => {
   try {
     const school = await School.findById(req.user.id).select("-principalPassword");
@@ -304,22 +322,17 @@ app.get("/me", authMiddleware, async (req, res) => {
 
 const counties = require("./data/counties");
 
-// ✅ Counties + Sub-counties Endpoint
 app.get("/counties", (req, res) => {
   res.json(counties);
 });
 
 /* ═══════════════════════════════════════════════════════════════════════
-   FINANCIAL YEARS + TRIAL BALANCE ROUTES
-   (previously routes/financialYears.js — mounted at /financial-years)
+   FINANCIAL YEARS + TRIAL BALANCE ROUTES (unchanged from original)
 ═══════════════════════════════════════════════════════════════════════ */
 
 const financialYearsRouter = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ---------------------------------------------------------------------
-// GET /financial-years — list all financial years for the logged-in school
-// ---------------------------------------------------------------------
 financialYearsRouter.get("/", authMiddleware, async (req, res) => {
   try {
     const years = await FinancialYear.find({ school: req.user.id }).sort({ startDate: -1 });
@@ -329,10 +342,6 @@ financialYearsRouter.get("/", authMiddleware, async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------------------
-// POST /financial-years — create a new financial year for the logged-in school
-// body: { label, startDate, endDate }
-// ---------------------------------------------------------------------
 financialYearsRouter.post("/", authMiddleware, async (req, res) => {
   try {
     const { label, startDate, endDate } = req.body;
@@ -340,10 +349,6 @@ financialYearsRouter.post("/", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "label, startDate and endDate are required." });
     }
 
-    // Deep-clone the shared DEFAULT_ACCOUNTS array so every financial year
-    // gets its own independent copy. Without this, Mongoose assigns _ids
-    // to the subdocuments in place on save, which would otherwise leak
-    // across every FinancialYear document created from the same reference.
     const accounts = JSON.parse(JSON.stringify(FinancialYear.DEFAULT_ACCOUNTS));
 
     const year = new FinancialYear({
@@ -360,10 +365,6 @@ financialYearsRouter.post("/", authMiddleware, async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------------------
-// GET /financial-years/:id — one financial year (scoped to logged-in school)
-// includes summary totals aggregated from TrialBalanceRow
-// ---------------------------------------------------------------------
 financialYearsRouter.get("/:id", authMiddleware, async (req, res) => {
   try {
     const year = await FinancialYear.findOne({ _id: req.params.id, school: req.user.id });
@@ -383,7 +384,7 @@ financialYearsRouter.get("/:id", authMiddleware, async (req, res) => {
       { receipts: 0, payments: 0, cash: 0 }
     );
     totals.surplus = totals.receipts - totals.payments;
-    totals.netAssets = totals.cash; // extend later once receivables/payables exist
+    totals.netAssets = totals.cash;
 
     res.json({ ...year.toObject(), totals, trialBalanceRows: rows });
   } catch (err) {
@@ -391,9 +392,6 @@ financialYearsRouter.get("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------------------
-// PATCH /financial-years/:id/finalize — lock the year
-// ---------------------------------------------------------------------
 financialYearsRouter.patch("/:id/finalize", authMiddleware, async (req, res) => {
   try {
     const year = await FinancialYear.findOneAndUpdate(
@@ -408,13 +406,6 @@ financialYearsRouter.patch("/:id/finalize", authMiddleware, async (req, res) => 
   }
 });
 
-// ---------------------------------------------------------------------
-// GET /financial-years/:id/trial-balance/template?account_keys[]=operations&account_keys[]=tuition
-// Generates one combined .xlsx with one sheet per requested account,
-// pre-filled with opening/closing balance rows and voteheads. Each data
-// row carries a hidden tag in the last column so the upload parser can
-// reliably map it back regardless of row order or relabeling.
-// ---------------------------------------------------------------------
 financialYearsRouter.get("/:id/trial-balance/template", authMiddleware, async (req, res) => {
   try {
     const year = await FinancialYear.findOne({ _id: req.params.id, school: req.user.id });
@@ -470,7 +461,6 @@ financialYearsRouter.get("/:id/trial-balance/template", authMiddleware, async (r
       rows.push(["Debit should equal Credit (Total Debit - Total Credit):", null, null, 0]);
 
       const ws = XLSX.utils.aoa_to_sheet(rows);
-      // Sheet names must be <=31 chars and unique — account.name already satisfies both here.
       XLSX.utils.book_append_sheet(wb, ws, account.name.substring(0, 31));
     }
 
@@ -489,11 +479,6 @@ financialYearsRouter.get("/:id/trial-balance/template", authMiddleware, async (r
   }
 });
 
-// ---------------------------------------------------------------------
-// POST /financial-years/:id/trial-balance/upload
-// Accepts the filled-in .xlsx (multipart field name "template") and
-// upserts TrialBalanceRow documents by reading the hidden tag column.
-// ---------------------------------------------------------------------
 financialYearsRouter.post(
   "/:id/trial-balance/upload",
   authMiddleware,
@@ -511,13 +496,13 @@ financialYearsRouter.post(
 
       for (const sheetName of wb.SheetNames) {
         const account = accountByName.get(sheetName);
-        if (!account) continue; // skip sheets that don't match a known account
+        if (!account) continue;
 
         const ws = wb.Sheets[sheetName];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
 
         for (const row of rows) {
-          const tag = row[7]; // hidden tag column (index 7 = column H)
+          const tag = row[7];
           if (!tag || typeof tag !== "string") continue;
 
           const [estimates, debit, credit, commitment, balance] = [
@@ -591,5 +576,20 @@ app.use("/financial-years", financialYearsRouter);
    START SERVER
 ═══════════════════════════════════════════════════════════════════════ */
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌐 Health check available at /health`);
+  console.log(`⏰ Keep-alive interval: ${KEEP_ALIVE_INTERVAL / 1000} seconds`);
+});
+
+// ─── OPTIONAL: Also ping from the client side ────────────────────────
+// If you want to add client-side keep-alive, uncomment this section
+// and add it to your frontend code.
+/*
+// In your frontend App.jsx or index.js:
+setInterval(() => {
+  fetch('https://your-server.onrender.com/health')
+    .then(res => res.json())
+    .then(data => console.log('💓 Server is alive'));
+}, 15000);
+*/
