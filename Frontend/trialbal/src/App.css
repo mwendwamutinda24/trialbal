@@ -1,9 +1,14 @@
 /* ---------------------------------------------------------------------------
    FinancialYear.css — Complete styles for FinancialYear component
    All classNames use 'fy-' prefix for consistency
+   Improved responsive layout with proper stacking context
 --------------------------------------------------------------------------- */
 
 /* ---- reset & base -------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
 .fy-page {
   display: flex;
   flex-direction: column;
@@ -27,12 +32,14 @@
   top: 0;
   z-index: 50;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  min-height: 72px;
 }
 
 .fy-header-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .fy-toggle-btn {
@@ -60,10 +67,12 @@
   background: #eef2ff;
   border-radius: 8px;
   color: #4f46e5;
+  flex-shrink: 0;
 }
 
 .fy-school-info {
   line-height: 1.3;
+  min-width: 0;
 }
 .fy-school-name-row {
   display: flex;
@@ -75,11 +84,15 @@
   font-weight: 600;
   color: #0f172a;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .fy-school-edit-icon {
   color: #94a3b8;
   cursor: pointer;
   transition: color 0.15s;
+  flex-shrink: 0;
 }
 .fy-school-edit-icon:hover {
   color: #4f46e5;
@@ -96,6 +109,8 @@
   gap: 1.5rem;
   flex: 1;
   margin-left: 1.75rem;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .fy-nav-link {
@@ -109,6 +124,7 @@
   padding: 0.25rem 0.5rem;
   border-radius: 6px;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .fy-nav-link:hover {
   background: #f1f5f9;
@@ -131,6 +147,7 @@
 /* ---- profile menu -------------------------------------------------------- */
 .fy-profile-wrap {
   position: relative;
+  flex-shrink: 0;
 }
 
 .fy-profile-trigger {
@@ -225,6 +242,7 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  height: calc(100vh - 72px);
 }
 
 /* ---- sidebar ------------------------------------------------------------- */
@@ -238,6 +256,7 @@
   flex-shrink: 0;
   transition: width 0.25s ease, padding 0.25s ease;
   overflow-y: auto;
+  height: 100%;
 }
 
 .fy-page--collapsed .fy-sidebar {
@@ -368,6 +387,7 @@
   padding: 1.75rem 2.25rem 2.5rem;
   overflow-y: auto;
   background: #f8fafc;
+  height: 100%;
 }
 
 /* loading & error */
@@ -738,61 +758,267 @@
   display: block;
 }
 
-/* ---- responsive ---------------------------------------------------------- */
+/* ---- ================================================================ ----
+   RESPONSIVE LAYOUT - FIXED HEADER OVERLAP
+   ================================================================ ---- */
+
+/* Tablet and smaller */
 @media (max-width: 992px) {
+  .fy-header {
+    padding: 0 1rem;
+    height: auto;
+    min-height: 64px;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    position: relative; /* Remove sticky on smaller screens */
+  }
+
+  .fy-body {
+    height: auto;
+    min-height: calc(100vh - 64px);
+  }
+
   .fy-nav-links {
     gap: 0.75rem;
-    margin-left: 1rem;
+    margin-left: 0.5rem;
+    flex-wrap: wrap;
+    flex: 0 1 auto;
+    order: 3;
+    width: 100%;
+    padding-top: 0.25rem;
+    border-top: 1px solid #f1f5f9;
   }
+
+  .fy-header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .fy-profile-wrap {
+    margin-left: auto;
+  }
+
   .fy-main {
     padding: 1.25rem 1.5rem;
   }
+
+  .fy-sidebar {
+    height: auto;
+    max-height: 200px;
+  }
 }
 
+/* Mobile */
 @media (max-width: 768px) {
   .fy-header {
-    padding: 0 1rem;
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 64px;
-    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 56px;
+    gap: 0.25rem;
+    position: relative; /* Remove sticky */
   }
+
+  .fy-header-left {
+    gap: 0.4rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .fy-school-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .fy-school-name {
+    font-size: 0.8rem;
+  }
+
+  .fy-school-county {
+    font-size: 0.6rem;
+  }
+
+  .fy-school-edit-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .fy-nav-links {
+    gap: 0.4rem;
+    margin-left: 0;
+    padding-top: 0.25rem;
+    flex-wrap: wrap;
+    order: 3;
+    width: 100%;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .fy-nav-link {
+    font-size: 0.7rem;
+    padding: 0.125rem 0.375rem;
+  }
+
+  .fy-year-pill {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.5rem;
+  }
+
+  .fy-profile-trigger {
+    padding: 0.125rem 0.25rem;
+  }
+
+  .fy-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.6rem;
+  }
+
+  .fy-profile-name {
+    font-size: 0.7rem;
+  }
+  .fy-profile-role {
+    font-size: 0.55rem;
+  }
+  .fy-chevron-icon {
+    width: 12px;
+    height: 12px;
+  }
+
   .fy-body {
     flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 56px);
   }
+
   .fy-sidebar {
     width: 100% !important;
     border-right: none;
     border-bottom: 1px solid #e2e8f0;
     flex-direction: row;
     flex-wrap: wrap;
-    padding: 0.75rem 1rem;
-    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    gap: 0.25rem;
     overflow-x: auto;
+    height: auto;
+    max-height: 160px;
   }
+
   .fy-sidebar-year {
     display: none;
   }
+
   .fy-sidebar-nav {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 0.25rem;
+    gap: 0.125rem;
     margin-bottom: 0;
+    flex: 1;
   }
+
   .fy-nav-item {
     width: auto;
-    padding: 0.25rem 0.625rem;
-    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
   }
+
   .fy-status-toggle {
     margin-top: 0;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
   }
+
   .fy-main {
-    padding: 1rem;
+    padding: 0.75rem;
+    height: auto;
+    overflow-y: visible;
   }
+
   .fy-stats-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
   }
+
+  .fy-stat-card {
+    padding: 0.75rem;
+  }
+
+  .fy-stat-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .fy-stat-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+  .fy-stat-value {
+    font-size: 0.9rem;
+  }
+
+  .fy-compare {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    gap: 0.3rem;
+  }
+
+  .fy-info-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .fy-info-title {
+    font-size: 0.9rem;
+  }
+
+  .fy-info-panel {
+    padding: 0.75rem 1rem;
+  }
+
+  .fy-info-input {
+    width: 80px;
+    font-size: 0.7rem;
+  }
+
+  .fy-panel {
+    padding: 0.75rem 1rem;
+  }
+  .fy-panel-header {
+    flex-direction: column;
+  }
+  .fy-panel-title {
+    font-size: 0.9rem;
+  }
+  .fy-panel-sub {
+    font-size: 0.7rem;
+  }
+
+  .fy-table {
+    font-size: 0.7rem;
+  }
+  .fy-table th,
+  .fy-table td {
+    padding: 0.25rem 0.4rem;
+  }
+
+  .fy-section {
+    padding: 0.75rem 1rem;
+  }
+  .fy-section-title {
+    font-size: 0.95rem;
+  }
+  .fy-section-sub {
+    font-size: 0.75rem;
+  }
+  .fy-section-content {
+    padding: 1.5rem 1rem;
+  }
+  .fy-section-icon {
+    font-size: 1.5rem;
+  }
+
+  .fy-btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+  }
+
+  /* Fix for collapsed state on mobile */
   .fy-page--collapsed .fy-nav-item span {
     display: inline;
   }
@@ -801,231 +1027,137 @@
   }
   .fy-page--collapsed .fy-nav-item {
     justify-content: flex-start;
-    padding: 0.25rem 0.625rem;
+    padding: 0.2rem 0.5rem;
   }
   .fy-page--collapsed .fy-sidebar-year {
     display: none;
   }
+  .fy-page--collapsed .fy-sidebar {
+    width: 100% !important;
+  }
 }
 
+/* Small mobile */
 @media (max-width: 480px) {
+  .fy-header {
+    padding: 0.4rem 0.5rem;
+    min-height: 48px;
+  }
+
+  .fy-body {
+    min-height: calc(100vh - 48px);
+  }
+
+  .fy-school-name {
+    font-size: 0.7rem;
+  }
+  .fy-school-county {
+    font-size: 0.5rem;
+  }
+  .fy-school-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .fy-school-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .fy-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.5rem;
+  }
+  .fy-profile-name {
+    font-size: 0.6rem;
+  }
+  .fy-profile-role {
+    font-size: 0.5rem;
+  }
+
+  .fy-nav-links {
+    gap: 0.2rem;
+  }
+  .fy-nav-link {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.25rem;
+  }
+  .fy-year-pill {
+    font-size: 0.55rem;
+    padding: 0.1rem 0.4rem;
+  }
+
   .fy-stats-grid {
     grid-template-columns: 1fr;
   }
-  .fy-panel-header {
-    flex-direction: column;
+
+  .fy-sidebar {
+    padding: 0.25rem 0.5rem;
+    max-height: 120px;
   }
+  .fy-nav-item {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.35rem;
+  }
+  .fy-status-toggle {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.35rem;
+  }
+
+  .fy-main {
+    padding: 0.5rem;
+  }
+
   .fy-compare {
-    flex-wrap: wrap;
-    gap: 0.3rem;
+    font-size: 0.65rem;
+    padding: 0.35rem 0.5rem;
   }
-  .fy-nav-links {
-    gap: 0.4rem;
-    flex-wrap: wrap;
+  .fy-compare-select {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
   }
-  .fy-nav-link {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.375rem;
-  }
-  .fy-year-pill {
+
+  .fy-info-table {
     font-size: 0.7rem;
-    padding: 0.125rem 0.625rem;
   }
-  .fy-header-left .fy-school-name {
-    font-size: 0.8rem;
+  .fy-info-table th,
+  .fy-info-table td {
+    padding: 0.2rem 0.3rem;
   }
-  .fy-info-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
+
   .fy-info-input {
-    width: 80px;
+    width: 60px;
+    font-size: 0.6rem;
+    padding: 0.1rem 0.25rem;
+  }
+
+  .fy-table {
+    font-size: 0.6rem;
+  }
+  .fy-table th,
+  .fy-table td {
+    padding: 0.15rem 0.25rem;
+  }
+
+  .fy-btn {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.4rem;
+  }
+  .fy-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .fy-section-content {
+    padding: 1rem 0.75rem;
+  }
+  .fy-section-icon {
+    font-size: 1.25rem;
+  }
+  .fy-section-content p {
+    font-size: 0.7rem;
   }
 }
-.fy-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background: #f1f5f9;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #0f172a;
-}
-
-/* ---- header -------------------------------------------------------------- */
-.fy-header {
-  flex-shrink: 0;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 1.75rem;
-  height: 72px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.fy-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.fy-toggle-btn {
-  background: transparent;
-  border: none;
-  color: #64748b;
-  padding: 0.375rem 0.5rem;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: all 0.15s;
-}
-.fy-toggle-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-.fy-school-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: #eef2ff;
-  border-radius: 8px;
-  color: #4f46e5;
-}
-
-.fy-school-info {
-  line-height: 1.3;
-}
-.fy-school-name-row {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-.fy-school-name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #0f172a;
-  margin: 0;
-}
-.fy-school-edit-icon {
-  color: #94a3b8;
-  cursor: pointer;
-  transition: color 0.15s;
-}
-.fy-school-edit-icon:hover {
-  color: #4f46e5;
-}
-.fy-school-county {
-  font-size: 0.7rem;
-  color: #64748b;
-  margin: 0;
-}
-
-.fy-nav-links {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  flex: 1;
-  margin-left:
-}
-.register-card {
-  width: 100%;
-  max-width: 528px;
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
-  padding: 40px 44px 36px;
-}
-/* -------------------------------------------------------------------------
-   new-financial-year.css
-   Only the classes NewFinancialYear.jsx introduces beyond your existing
-   hk-* / fy-* styles. Import this alongside your existing stylesheet(s),
-   e.g.: import './new-financial-year.css';
-------------------------------------------------------------------------- */
-
-.nfy-main {
-  max-width: 560px;
-  margin: 0 auto;
-}
-
-.nfy-panel {
-  margin-top: 16px;
-}
-
-.nfy-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.nfy-row {
-  display: flex;
-  gap: 16px;
-}
-
-.nfy-row .nfy-field {
-  flex: 1;
-}
-
-.nfy-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.nfy-field-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
-  letter-spacing: 0.02em;
-}
-
-.nfy-input {
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 14px;
-  color: #141414;
-  background: #fff;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.nfy-input:focus {
-  border-color: #e8b923;
-  box-shadow: 0 0 0 3px rgba(232, 185, 35, 0.15);
-}
-
-.nfy-error {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 13px;
-  margin: 0;
-}
-
-.nfy-btn-row {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.nfy-existing-note {
-  margin-top: 16px;
-}
-
 /* -------------------------------------------------------------------------
    Small addition to Home.jsx: a persistent "+ New Financial Year" link next
    to the "Financial Years" section heading.
