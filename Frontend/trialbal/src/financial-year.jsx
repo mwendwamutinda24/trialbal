@@ -1,40 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-
-/**
- * ---------------------------------------------------------------------------
- * FinancialYear.jsx — single financial year detail page (sidebar dashboard)
- * ---------------------------------------------------------------------------
- * Route it like: <Route path="/financial-years/:id" element={<FinancialYear />} />
- *
- * Layout:
- *  - Top header: sidebar collapse toggle, school name/county, Home +
- *    Financial Years links, year badge, profile menu.
- *  - Left sidebar: year label/dates/status, section nav (Overview, Trial
- *    Balance, Notes, Cash and Bank, Receivables, Payables, Financial
- *    Statements, IPSAS Report). Switching sections is local state — no
- *    route change — so all data stays loaded.
- *  - Main content swaps based on the active section.
- *
- * Data flow:
- *  - On load: GET /me (school + principal), GET /financial-years (for the
- *    "Compare with" dropdown), GET /financial-years/:id (label, dates,
- *    status, totals), GET /financial-years/:id/trial-balance (rows).
- *  - Upload: POST /financial-years/:id/trial-balance/upload (multipart,
- *    field "file"). Download: GET /financial-years/:id/trial-balance/download.
- *  - Finalize / unlock: PATCH /financial-years/:id with { status }.
- *  - Additional Information: ASSUMED PATCH /financial-years/:id/additional-info
- *    with { inventories }. Swap this out for your real endpoint/shape —
- *    it isn't specified anywhere in what was shared with me, so it's a stub.
- *  - Notes / Cash and Bank / Receivables / Payables / Financial Statements /
- *    IPSAS Report: no API given yet, rendered as placeholders so the nav
- *    shell matches the design and can be filled in per-section later.
- *
- * Classes: reuses hk-* (Home.jsx) and fy-* (NewFinancialYear.jsx) where
- * possible. New fy-shell-*, fy-side-*, fy-tb-*, fy-info-* classes are
- * introduced for the sidebar layout — add them to your stylesheet.
- * ---------------------------------------------------------------------------
- */
+import './FinancialYear.css';
 
 const API_URL = "https://trialbal-1.onrender.com";
 
@@ -84,26 +50,25 @@ const NAV_SECTIONS = [
   { key: 'ipsas-report', label: 'IPSAS Report', icon: IconFileCheck },
 ];
 
-// Default inventory line items shown under "Additional Information".
-// ASSUMPTION: adjust this list / wire it to your real schema once you
-// share the actual Additional Information fields your backend expects.
 const DEFAULT_INVENTORY_ITEMS = [
-  { key: 'foodstuffBes', label: 'Food stuff -BES' },
-  { key: 'stationeriesTeaching', label: 'Stationaries- Teaching and Learning Materials' },
-  { key: 'labChemicalsTeaching', label: 'Lab chemicals- Teaching and Learning Materials' },
+  { key: 'foodstuffBes', label: 'Food stuff - BES' },
+  { key: 'stationeriesTeaching', label: 'Stationaries - Teaching and Learning Materials' },
+  { key: 'labChemicalsTeaching', label: 'Lab chemicals - Teaching and Learning Materials' },
   { key: 'fuelLubricants', label: 'Fuel and Lubricants' },
   { key: 'medicalSupplies', label: 'Medical Supplies' },
 ];
 
-// ---- small building blocks -------------------------------------------------
+// ---- components -----------------------------------------------------------
 function StatCard({ icon, tint, label, value }) {
   return (
-    <div className="hk-stat-card">
-      <div className="hk-stat-icon" style={{ backgroundColor: tint.bg, color: tint.fg }}>
+    <div className="fy-stat-card">
+      <div className="fy-stat-icon" style={{ backgroundColor: tint.bg, color: tint.fg }}>
         {icon}
       </div>
-      <p className="hk-stat-label">{label}</p>
-      <p className="hk-stat-value">{formatAmount(value)}</p>
+      <div>
+        <p className="fy-stat-label">{label}</p>
+        <p className="fy-stat-value">{formatAmount(value)}</p>
+      </div>
     </div>
   );
 }
@@ -111,7 +76,7 @@ function StatCard({ icon, tint, label, value }) {
 function StatusBadge({ status }) {
   const finalized = status === 'finalized';
   return (
-    <span className={`fy-status-badge ${finalized ? 'fy-status-badge--final' : 'fy-status-badge--draft'}`}>
+    <span className={`fy-badge ${finalized ? 'fy-badge--final' : 'fy-badge--draft'}`}>
       {finalized ? 'Finalized' : 'Draft'}
     </span>
   );
@@ -132,22 +97,22 @@ function ProfileMenu({ user, onEditProfile, onLogOut }) {
   if (!user) return null;
 
   return (
-    <div className="hk-profile-menu" ref={ref}>
-      <button onClick={() => setOpen((v) => !v)} className="hk-profile-trigger">
-        <span className="hk-avatar">{user.initials}</span>
-        <span className="hk-profile-text">
-          <span className="hk-profile-name">{user.name}</span>
-          <span className="hk-profile-role">{user.role}</span>
+    <div className="fy-profile-wrap" ref={ref}>
+      <button onClick={() => setOpen((v) => !v)} className="fy-profile-trigger">
+        <span className="fy-avatar">{user.initials}</span>
+        <span className="fy-profile-text">
+          <span className="fy-profile-name">{user.name}</span>
+          <span className="fy-profile-role">{user.role}</span>
         </span>
-        <IconChevronDown className="hk-chevron" />
+        <IconChevronDown className="fy-chevron-icon" />
       </button>
 
       {open && (
-        <div className="hk-profile-dropdown">
-          <button onClick={onEditProfile} className="hk-dropdown-item">
+        <div className="fy-dropdown">
+          <button onClick={onEditProfile} className="fy-dropdown-item">
             <IconUser width={16} height={16} /> Edit profile
           </button>
-          <button onClick={onLogOut} className="hk-dropdown-item hk-dropdown-item--danger">
+          <button onClick={onLogOut} className="fy-dropdown-item fy-dropdown-item--danger">
             <IconLogOut width={16} height={16} /> Log out
           </button>
         </div>
@@ -159,9 +124,9 @@ function ProfileMenu({ user, onEditProfile, onLogOut }) {
 function TrialBalanceTable({ rows }) {
   if (!rows.length) {
     return (
-      <div className="hk-empty-state">
-        <p className="hk-empty-title">No trial balance uploaded yet</p>
-        <p className="hk-empty-sub">
+      <div className="fy-empty">
+        <p className="fy-empty-title">No trial balance uploaded yet</p>
+        <p className="fy-empty-sub">
           Upload an Excel file with your account codes, names, debits and credits to get started.
         </p>
       </div>
@@ -205,7 +170,7 @@ function TrialBalanceTable({ rows }) {
       </table>
 
       {!balanced && (
-        <p className="fy-imbalance-warning">
+        <p className="fy-imbalance">
           Debits and credits don't match (difference of {formatAmount(Math.abs(totalDebit - totalCredit))}). Check the uploaded file.
         </p>
       )}
@@ -213,18 +178,14 @@ function TrialBalanceTable({ rows }) {
   );
 }
 
-function PlaceholderSection({ title }) {
+function SectionPlaceholder({ title, content }) {
   return (
-    <div className="hk-panel">
-      <div className="hk-panel-header">
-        <div>
-          <h3 className="hk-panel-title">{title}</h3>
-          <p className="hk-panel-subtitle">This section isn't wired up yet — add its data and fields here.</p>
-        </div>
-      </div>
-      <div className="hk-empty-state">
-        <p className="hk-empty-title">Coming soon</p>
-        <p className="hk-empty-sub">Tell me what {title.toLowerCase()} should show and I'll build it out.</p>
+    <div className="fy-section">
+      <h3 className="fy-section-title">{title}</h3>
+      <p className="fy-section-sub">This section is ready for data entry.</p>
+      <div className="fy-section-content">
+        <span className="fy-section-icon">📋</span>
+        <p>{content || `Start adding ${title.toLowerCase()} data here.`}</p>
       </div>
     </div>
   );
@@ -402,7 +363,6 @@ function FinancialYear() {
     }
   }
 
-  // ASSUMPTION: endpoint/shape not specified — adjust to match your backend.
   async function handleSaveAdditionalInfo() {
     setSavingInfo(true);
     setError('');
@@ -429,7 +389,7 @@ function FinancialYear() {
 
   if (loading) {
     return (
-      <div className="hk-loading">
+      <div className="fy-loading">
         <p>Loading financial year…</p>
       </div>
     );
@@ -437,9 +397,9 @@ function FinancialYear() {
 
   if (!year) {
     return (
-      <div className="hk-loading">
+      <div className="fy-loading">
         <p>{error || 'Financial year not found.'}</p>
-        <Link to="/home" className="fy-breadcrumb"><IconChevronLeft /> Back to dashboard</Link>
+        <Link to="/home" className="fy-back-link"><IconChevronLeft /> Back to dashboard</Link>
       </div>
     );
   }
@@ -447,40 +407,41 @@ function FinancialYear() {
   const totals = year.totals || { receipts: 0, payments: 0, surplus: 0, cash: 0, netAssets: 0 };
   const isFinalized = year.status === 'finalized';
   const compareOptions = allYears.filter((y) => y._id !== id);
+  const totalInventory = Object.values(inventories).reduce((sum, val) => sum + Number(val), 0);
 
   return (
-    <div className={`fy-shell ${sidebarCollapsed ? 'fy-shell--collapsed' : ''}`}>
+    <div className={`fy-page ${sidebarCollapsed ? 'fy-page--collapsed' : ''}`}>
       {/* header */}
-      <header className="hk-header fy-shell-header">
-        <div className="hk-header-left">
+      <header className="fy-header">
+        <div className="fy-header-left">
           <button
             type="button"
-            className="fy-sidebar-toggle"
+            className="fy-toggle-btn"
             onClick={() => setSidebarCollapsed((v) => !v)}
             aria-label="Toggle sidebar"
           >
             <IconPanelLeft />
           </button>
-          <span className="hk-icon-badge">
+          <span className="fy-school-icon">
             <IconBuilding />
           </span>
-          <div>
-            <div className="hk-school-name-row">
-              <h1 className="hk-school-name">{school?.name}</h1>
-              <IconPencil width={14} height={14} className="hk-pencil-icon" />
+          <div className="fy-school-info">
+            <div className="fy-school-name-row">
+              <h1 className="fy-school-name">{school?.name}</h1>
+              <IconPencil width={14} height={14} className="fy-school-edit-icon" />
             </div>
-            <p className="hk-county">{school?.county}</p>
+            <p className="fy-school-county">{school?.county}</p>
           </div>
         </div>
 
-        <nav className="fy-shell-nav">
-          <Link to="/home" className="fy-shell-nav-link">
+        <nav className="fy-nav-links">
+          <Link to="/home" className="fy-nav-link">
             <IconHome width={16} height={16} /> Home
           </Link>
-          <Link to="/financial-years" className="fy-shell-nav-link">
+          <Link to="/financial-years" className="fy-nav-link">
             <IconCalendar width={16} height={16} /> Financial Years
           </Link>
-          <span className="fy-shell-year-pill">
+          <span className="fy-year-pill">
             <IconLock width={14} height={14} /> {year.label} · <StatusBadge status={year.status} />
           </span>
         </nav>
@@ -488,23 +449,23 @@ function FinancialYear() {
         <ProfileMenu user={user} onEditProfile={handleEditProfile} onLogOut={handleLogOut} />
       </header>
 
-      <div className="fy-shell-body">
+      <div className="fy-body">
         {/* sidebar */}
-        <aside className="fy-side">
-          <div className="fy-side-year">
-            <p className="fy-side-year-label">{year.label}</p>
-            <p className="fy-side-year-dates">
+        <aside className={`fy-sidebar ${sidebarCollapsed ? 'fy-sidebar--collapsed' : ''}`}>
+          <div className="fy-sidebar-year">
+            <p className="fy-sidebar-year-label">{year.label}</p>
+            <p className="fy-sidebar-year-dates">
               {year.startDate?.slice(0, 10)} – {year.endDate?.slice(0, 10)}
             </p>
             <StatusBadge status={year.status} />
           </div>
 
-          <nav className="fy-side-nav">
+          <nav className="fy-sidebar-nav">
             {NAV_SECTIONS.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
                 type="button"
-                className={`fy-side-nav-item ${activeSection === key ? 'fy-side-nav-item--active' : ''}`}
+                className={`fy-nav-item ${activeSection === key ? 'fy-nav-item--active' : ''}`}
                 onClick={() => setActiveSection(key)}
               >
                 <Icon width={16} height={16} />
@@ -515,7 +476,7 @@ function FinancialYear() {
 
           <button
             type="button"
-            className="fy-btn fy-side-status-btn"
+            className="fy-status-toggle"
             onClick={handleToggleStatus}
             disabled={statusUpdating}
           >
@@ -525,12 +486,12 @@ function FinancialYear() {
         </aside>
 
         {/* main content */}
-        <main className="hk-main fy-shell-main">
-          {error && <p className="nfy-error">{error}</p>}
+        <main className="fy-main">
+          {error && <p className="fy-error">{error}</p>}
 
           {activeSection === 'overview' && (
             <>
-              <div className="fy-compare-row">
+              <div className="fy-compare">
                 <span>Compare</span>
                 <span className="fy-compare-current">{year.label}</span>
                 <span>with</span>
@@ -546,7 +507,7 @@ function FinancialYear() {
                 </select>
               </div>
 
-              <div className="hk-grid-stats">
+              <div className="fy-stats-grid">
                 <StatCard icon={<IconArrowUp />} tint={{ bg: '#ecfdf5', fg: '#059669' }} label="Total Revenue" value={totals.receipts} />
                 <StatCard icon={<IconArrowDown />} tint={{ bg: '#fef2f2', fg: '#dc2626' }} label="Total Expenses" value={totals.payments} />
                 <StatCard icon={<IconScale />} tint={{ bg: '#eff6ff', fg: '#2563eb' }} label="Surplus / (Deficit)" value={totals.surplus} />
@@ -554,10 +515,10 @@ function FinancialYear() {
                 <StatCard icon={<IconPiggyBank />} tint={{ bg: '#faf5ff', fg: '#7c3aed' }} label="Net Assets" value={totals.netAssets} />
               </div>
 
-              <p className="fy-sidebar-hint">Use the sidebar to open the trial balance or drill into a report.</p>
+              <p className="fy-hint">Use the sidebar to open the trial balance or drill into a report.</p>
 
-              <div className="fy-info-header-row">
-                <h3 className="hk-section-title">Additional Information</h3>
+              <div className="fy-info-header">
+                <h3 className="fy-info-title">Additional Information</h3>
                 <button
                   type="button"
                   className="fy-btn fy-btn--primary"
@@ -568,11 +529,11 @@ function FinancialYear() {
                   {savingInfo ? 'Saving…' : 'Save additional information'}
                 </button>
               </div>
-              <p className="hk-panel-subtitle">
+              <p className="fy-info-sub">
                 School and year-end disclosures from the Additional Information sheet. These feed the Overview and the IPSAS report.
               </p>
 
-              <div className="hk-panel fy-info-panel">
+              <div className="fy-info-panel">
                 <h4 className="fy-info-section-title">1) Inventories as at prior year end</h4>
                 <table className="fy-info-table">
                   <thead>
@@ -601,6 +562,10 @@ function FinancialYear() {
                         </td>
                       </tr>
                     ))}
+                    <tr className="fy-info-total">
+                      <td><strong>Total</strong></td>
+                      <td className="fy-table-num"><strong>{formatAmount(totalInventory)}</strong></td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -608,11 +573,11 @@ function FinancialYear() {
           )}
 
           {activeSection === 'trial-balance' && (
-            <div className="hk-panel">
-              <div className="hk-panel-header fy-tb-header">
+            <div className="fy-panel">
+              <div className="fy-panel-header">
                 <div>
-                  <h3 className="hk-panel-title">Trial Balance</h3>
-                  <p className="hk-panel-subtitle">Upload an Excel file or download the current data.</p>
+                  <h3 className="fy-panel-title">Trial Balance</h3>
+                  <p className="fy-panel-sub">Upload an Excel file or download the current data.</p>
                 </div>
 
                 <div className="fy-tb-actions">
@@ -642,12 +607,12 @@ function FinancialYear() {
             </div>
           )}
 
-          {activeSection === 'notes' && <PlaceholderSection title="Notes" />}
-          {activeSection === 'cash-bank' && <PlaceholderSection title="Cash and Bank" />}
-          {activeSection === 'receivables' && <PlaceholderSection title="Receivables" />}
-          {activeSection === 'payables' && <PlaceholderSection title="Payables" />}
-          {activeSection === 'financial-statements' && <PlaceholderSection title="Financial Statements" />}
-          {activeSection === 'ipsas-report' && <PlaceholderSection title="IPSAS Report" />}
+          {activeSection === 'notes' && <SectionPlaceholder title="Notes" content="Add narrative disclosures and notes to the financial statements." />}
+          {activeSection === 'cash-bank' && <SectionPlaceholder title="Cash and Bank" content="Manage cash and bank account balances and transactions." />}
+          {activeSection === 'receivables' && <SectionPlaceholder title="Receivables" content="Track amounts owed to the school from debtors and other entities." />}
+          {activeSection === 'payables' && <SectionPlaceholder title="Payables" content="Manage creditors, suppliers, and other amounts owed by the school." />}
+          {activeSection === 'financial-statements' && <SectionPlaceholder title="Financial Statements" content="View and prepare the complete set of financial statements." />}
+          {activeSection === 'ipsas-report' && <SectionPlaceholder title="IPSAS Report" content="Generate the full IPSAS-compliant annual report and financial statements." />}
         </main>
       </div>
     </div>
