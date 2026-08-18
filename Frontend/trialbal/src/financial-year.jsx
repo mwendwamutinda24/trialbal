@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-
+import './FinancialYear.css';
 
 const API_URL = "https://trialbal-1.onrender.com";
 
@@ -215,6 +215,520 @@ function TrialBalanceTable({ rows, onCellChange }) {
   );
 }
 
+// ---- Receivables Section ----------------------------------------------------
+function ReceivablesSection({ year, isFinalized }) {
+  const [receivables, setReceivables] = useState([
+    { type: 'Fees Arrears', currentFY: 0, comparativeFY: 0 },
+    { type: 'Salary Advances', currentFY: 0, comparativeFY: 0 },
+    { type: 'Imprest', currentFY: 0, comparativeFY: 0 },
+    { type: 'Rent arrears', currentFY: 0, comparativeFY: 0 },
+    { type: 'Other Debtor', currentFY: 0, comparativeFY: 0 },
+  ]);
+
+  const [additionalReceivables, setAdditionalReceivables] = useState([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newReceivable, setNewReceivable] = useState({ type: '', description: '', amount: 0, age: '' });
+
+  const totalReceivables = receivables.reduce((sum, r) => sum + (Number(r.currentFY) || 0), 0) + 
+                           additionalReceivables.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+  const handleAddReceivable = () => {
+    if (newReceivable.type && newReceivable.description) {
+      setAdditionalReceivables([...additionalReceivables, { ...newReceivable, id: Date.now() }]);
+      setNewReceivable({ type: '', description: '', amount: 0, age: '' });
+      setShowAddForm(false);
+    }
+  };
+
+  return (
+    <div className="fy-section">
+      <div className="fy-section-header">
+        <h3 className="fy-section-title">21 Accounts Receivable</h3>
+        <button className="fy-btn fy-btn--primary" onClick={() => setShowAddForm(!showAddForm)}>
+          + Add receivable
+        </button>
+      </div>
+
+      <div className="fy-account-section">
+        <h4 className="fy-account-subtitle">Note 21: Accounts Receivable</h4>
+        
+        <table className="fy-statement-table">
+          <thead>
+            <tr>
+              <th>DESCRIPTION</th>
+              <th className="fy-table-num">CURRENT FY (KSHS)</th>
+              <th className="fy-table-num">COMPARATIVE FY (KSHS)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="fy-account-section-header">
+              <td colSpan={3}><strong>Fees Arrears</strong></td>
+            </tr>
+            {receivables.filter(r => r.type === 'Fees Arrears').map((r, idx) => (
+              <tr key={idx}>
+                <td>Fees Arrears</td>
+                <td className="fy-table-num">
+                  <input type="number" className="fy-info-input" value={r.currentFY} 
+                    onChange={(e) => {
+                      const updated = [...receivables];
+                      updated[idx].currentFY = Number(e.target.value);
+                      setReceivables(updated);
+                    }}
+                    disabled={isFinalized} />
+                </td>
+                <td className="fy-table-num">
+                  <input type="number" className="fy-info-input" value={r.comparativeFY} 
+                    onChange={(e) => {
+                      const updated = [...receivables];
+                      updated[idx].comparativeFY = Number(e.target.value);
+                      setReceivables(updated);
+                    }}
+                    disabled={isFinalized} />
+                </td>
+              </tr>
+            ))}
+            
+            <tr className="fy-account-section-header">
+              <td colSpan={3}><strong>Other Non-Fees Receivables</strong></td>
+            </tr>
+            {receivables.filter(r => r.type !== 'Fees Arrears').map((r, idx) => {
+              const adjustedIdx = receivables.indexOf(r);
+              return (
+                <tr key={idx}>
+                  <td>{r.type} {r.type === 'Other Debtor' && '(specify)'}</td>
+                  <td className="fy-table-num">
+                    <input type="number" className="fy-info-input" value={r.currentFY} 
+                      onChange={(e) => {
+                        const updated = [...receivables];
+                        updated[adjustedIdx].currentFY = Number(e.target.value);
+                        setReceivables(updated);
+                      }}
+                      disabled={isFinalized} />
+                  </td>
+                  <td className="fy-table-num">
+                    <input type="number" className="fy-info-input" value={r.comparativeFY} 
+                      onChange={(e) => {
+                        const updated = [...receivables];
+                        updated[adjustedIdx].comparativeFY = Number(e.target.value);
+                        setReceivables(updated);
+                      }}
+                      disabled={isFinalized} />
+                  </td>
+                </tr>
+              );
+            })}
+            
+            {additionalReceivables.map((r) => (
+              <tr key={r.id}>
+                <td>{r.description}</td>
+                <td className="fy-table-num">{formatAmount(r.amount)}</td>
+                <td className="fy-table-num">0.00</td>
+              </tr>
+            ))}
+            
+            <tr className="fy-statement-total">
+              <td><strong>Total</strong></td>
+              <td className="fy-table-num"><strong>{formatAmount(totalReceivables)}</strong></td>
+              <td className="fy-table-num"><strong>0.00</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {showAddForm && (
+        <div className="fy-add-form">
+          <h5>Add Receivable</h5>
+          <div className="fy-form-grid">
+            <div className="fy-form-field">
+              <label>Type</label>
+              <select className="fy-select" value={newReceivable.type} onChange={(e) => setNewReceivable({...newReceivable, type: e.target.value})}>
+                <option value="">Select type</option>
+                <option value="Fees Arrears">Fees Arrears</option>
+                <option value="Salary Advances">Salary Advances</option>
+                <option value="Imprest">Imprest</option>
+                <option value="Rent arrears">Rent arrears</option>
+                <option value="Other Debtor">Other Debtor</option>
+              </select>
+            </div>
+            <div className="fy-form-field">
+              <label>Description</label>
+              <input type="text" className="fy-text-input" value={newReceivable.description} 
+                onChange={(e) => setNewReceivable({...newReceivable, description: e.target.value})} />
+            </div>
+            <div className="fy-form-field">
+              <label>Amount</label>
+              <input type="number" className="fy-text-input" value={newReceivable.amount} 
+                onChange={(e) => setNewReceivable({...newReceivable, amount: Number(e.target.value)})} />
+            </div>
+            <div className="fy-form-field">
+              <label>Age</label>
+              <select className="fy-select" value={newReceivable.age} onChange={(e) => setNewReceivable({...newReceivable, age: e.target.value})}>
+                <option value="">Select age</option>
+                <option value="0-30 days">0-30 days</option>
+                <option value="31-60 days">31-60 days</option>
+                <option value="61-90 days">61-90 days</option>
+                <option value="90+ days">90+ days</option>
+              </select>
+            </div>
+          </div>
+          <div className="fy-form-actions">
+            <button className="fy-btn" onClick={() => setShowAddForm(false)}>Cancel</button>
+            <button className="fy-btn fy-btn--primary" onClick={handleAddReceivable}>Add</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Payables Section ----------------------------------------------------
+function PayablesSection({ year, isFinalized }) {
+  const [payables, setPayables] = useState({
+    feesReceivedInAdvance: { currentFY: 0, comparativeFY: 0 },
+    accountsPayable: { boarding: 0, tuition: 0 },
+    borrowings: { shortTerm: 0, longTerm: 0 },
+    provisions: { currentFY: 0, comparativeFY: 0 },
+  });
+
+  const [feesAdvanceItems, setFeesAdvanceItems] = useState([]);
+  const [showAddFeesAdvance, setShowAddFeesAdvance] = useState(false);
+  const [newFeesAdvance, setNewFeesAdvance] = useState({ description: '', amount: 0 });
+
+  const handleAddFeesAdvance = () => {
+    if (newFeesAdvance.description) {
+      setFeesAdvanceItems([...feesAdvanceItems, { ...newFeesAdvance, id: Date.now() }]);
+      setNewFeesAdvance({ description: '', amount: 0 });
+      setShowAddFeesAdvance(false);
+    }
+  };
+
+  const totalFeesAdvance = feesAdvanceItems.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+  return (
+    <div className="fy-section">
+      <div className="fy-section-header">
+        <h3 className="fy-section-title">Payables</h3>
+      </div>
+
+      {/* 28 Fees Received in Advance */}
+      <div className="fy-account-section">
+        <h4 className="fy-account-subtitle">Note 28: Fees Received in Advance</h4>
+        <table className="fy-statement-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th className="fy-table-num">CURRENT FY (KSHS)</th>
+              <th className="fy-table-num">COMPARATIVE FY (KSHS)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Amount received during the year</td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={payables.feesReceivedInAdvance.currentFY} 
+                  onChange={(e) => setPayables({...payables, feesReceivedInAdvance: {...payables.feesReceivedInAdvance, currentFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={payables.feesReceivedInAdvance.comparativeFY} 
+                  onChange={(e) => setPayables({...payables, feesReceivedInAdvance: {...payables.feesReceivedInAdvance, comparativeFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+            </tr>
+            <tr className="fy-statement-total">
+              <td><strong>Total</strong></td>
+              <td className="fy-table-num"><strong>{formatAmount(payables.feesReceivedInAdvance.currentFY + totalFeesAdvance)}</strong></td>
+              <td className="fy-table-num"><strong>{formatAmount(payables.feesReceivedInAdvance.comparativeFY)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <button className="fy-btn fy-btn--primary" onClick={() => setShowAddFeesAdvance(!showAddFeesAdvance)}>
+          + Add fees received in advance
+        </button>
+
+        {showAddFeesAdvance && (
+          <div className="fy-add-form fy-add-form-inline">
+            <div className="fy-form-field">
+              <label>Description</label>
+              <input type="text" className="fy-text-input" placeholder="Description" 
+                value={newFeesAdvance.description} onChange={(e) => setNewFeesAdvance({...newFeesAdvance, description: e.target.value})} />
+            </div>
+            <div className="fy-form-field">
+              <label>Amount</label>
+              <input type="number" className="fy-text-input" placeholder="Amount" 
+                value={newFeesAdvance.amount} onChange={(e) => setNewFeesAdvance({...newFeesAdvance, amount: Number(e.target.value)})} />
+            </div>
+            <div className="fy-form-actions">
+              <button className="fy-btn" onClick={() => setShowAddFeesAdvance(false)}>Cancel</button>
+              <button className="fy-btn fy-btn--primary" onClick={handleAddFeesAdvance}>Add</button>
+            </div>
+          </div>
+        )}
+
+        {/* Fees Advance Items List */}
+        {feesAdvanceItems.length > 0 && (
+          <table className="fy-info-table">
+            <thead>
+              <tr>
+                <th>DESCRIPTION</th>
+                <th className="fy-table-num">AMOUNT</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {feesAdvanceItems.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.description}</td>
+                  <td className="fy-table-num">{formatAmount(item.amount)}</td>
+                  <td>
+                    <button className="fy-btn fy-btn--danger" onClick={() => setFeesAdvanceItems(feesAdvanceItems.filter(i => i.id !== item.id))}>
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* 29 Accounts Payable */}
+      <div className="fy-account-section">
+        <h4 className="fy-account-subtitle">29 Accounts Payable</h4>
+        <h5 className="fy-account-sub-subtitle">29A Ageing Analysis</h5>
+        <table className="fy-statement-table">
+          <thead>
+            <tr>
+              <th>VOTEHEAD</th>
+              <th className="fy-table-num">BOARDING ACCOUNT</th>
+              <th className="fy-table-num">TUITION ACCOUNT</th>
+            </tr>
+          </thead>
+          <tbody>
+            {['Repairs, Maintenance & Improv', 'Boarding, Equipment & Stores/Lunch', 'Administration Cost', 'Electricity, Water & Conservancy', 'Laboratory Equipments'].map((vh) => (
+              <tr key={vh}>
+                <td>{vh}</td>
+                <td className="fy-table-num">
+                  <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+                </td>
+                <td className="fy-table-num">
+                  <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* 30 Borrowings */}
+      <div className="fy-account-section">
+        <h4 className="fy-account-subtitle">30 Borrowings</h4>
+        <h5 className="fy-account-sub-subtitle">30A Short Term Borrowings</h5>
+        <div className="fy-info-field">
+          <label>Short Term Borrowings</label>
+          <input type="number" className="fy-info-input" value={payables.borrowings.shortTerm} 
+            onChange={(e) => setPayables({...payables, borrowings: {...payables.borrowings, shortTerm: Number(e.target.value)}})}
+            disabled={isFinalized} />
+        </div>
+        <h5 className="fy-account-sub-subtitle">30B Long Term Borrowings</h5>
+        <div className="fy-info-field">
+          <label>Long Term Borrowings</label>
+          <input type="number" className="fy-info-input" value={payables.borrowings.longTerm} 
+            onChange={(e) => setPayables({...payables, borrowings: {...payables.borrowings, longTerm: Number(e.target.value)}})}
+            disabled={isFinalized} />
+        </div>
+      </div>
+
+      {/* 31 Provisions */}
+      <div className="fy-account-section">
+        <h4 className="fy-account-subtitle">31 Provisions</h4>
+        <div className="fy-info-field">
+          <label>Provisions</label>
+          <input type="number" className="fy-info-input" value={payables.provisions.currentFY} 
+            onChange={(e) => setPayables({...payables, provisions: {...payables.provisions, currentFY: Number(e.target.value)}})}
+            disabled={isFinalized} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Cash and Bank Section ------------------------------------------------
+function CashBankSection({ year, isFinalized }) {
+  const [cashBank, setCashBank] = useState({
+    bank: { note: '20a', currentFY: 0, comparativeFY: 0 },
+    cash: { note: '20b', currentFY: 0, comparativeFY: 0 },
+    shortTermInvestment: { note: '20c', currentFY: 0, comparativeFY: 0 },
+  });
+
+  const totalCash = cashBank.bank.currentFY + cashBank.cash.currentFY + cashBank.shortTermInvestment.currentFY;
+
+  return (
+    <div className="fy-section">
+      <div className="fy-section-header">
+        <h3 className="fy-section-title">20 Cash and cash equivalent</h3>
+      </div>
+
+      <div className="fy-account-section">
+        <h4 className="fy-account-subtitle">Note 20: Cash and cash equivalent</h4>
+        <table className="fy-statement-table">
+          <thead>
+            <tr>
+              <th>DESCRIPTION</th>
+              <th className="fy-table-num">NOTE</th>
+              <th className="fy-table-num">CURRENT FY (KSHS)</th>
+              <th className="fy-table-num">COMPARATIVE FY (KSHS)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Bank</td>
+              <td className="fy-table-num">20a</td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={cashBank.bank.currentFY} 
+                  onChange={(e) => setCashBank({...cashBank, bank: {...cashBank.bank, currentFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={cashBank.bank.comparativeFY} 
+                  onChange={(e) => setCashBank({...cashBank, bank: {...cashBank.bank, comparativeFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+            </tr>
+            <tr>
+              <td>Cash</td>
+              <td className="fy-table-num">20b</td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={cashBank.cash.currentFY} 
+                  onChange={(e) => setCashBank({...cashBank, cash: {...cashBank.cash, currentFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={cashBank.cash.comparativeFY} 
+                  onChange={(e) => setCashBank({...cashBank, cash: {...cashBank.cash, comparativeFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+            </tr>
+            <tr>
+              <td>Short term investment</td>
+              <td className="fy-table-num">20c</td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={cashBank.shortTermInvestment.currentFY} 
+                  onChange={(e) => setCashBank({...cashBank, shortTermInvestment: {...cashBank.shortTermInvestment, currentFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={cashBank.shortTermInvestment.comparativeFY} 
+                  onChange={(e) => setCashBank({...cashBank, shortTermInvestment: {...cashBank.shortTermInvestment, comparativeFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+            </tr>
+            <tr className="fy-statement-total">
+              <td><strong>Total</strong></td>
+              <td className="fy-table-num"></td>
+              <td className="fy-table-num"><strong>{formatAmount(totalCash)}</strong></td>
+              <td className="fy-table-num"><strong>{formatAmount(cashBank.bank.comparativeFY + cashBank.cash.comparativeFY + cashBank.shortTermInvestment.comparativeFY)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ---- Notes Section --------------------------------------------------------
+function NotesSection({ year, isFinalized }) {
+  const [notes, setNotes] = useState({
+    note1: { currentFY: 0, comparativeFY: 0, other: 0 },
+    note2: { currentFY: 0, comparativeFY: 0, other: 0 },
+    note3: { currentFY: 0, comparativeFY: 0, other: 0 },
+    note4: { currentFY: 0, comparativeFY: 0, other: 0 },
+    note5: { currentFY: 0, comparativeFY: 0, other: 0 },
+    note6: { currentFY: 0, comparativeFY: 0, other: 0 },
+    note7: { currentFY: 0, comparativeFY: 0, other: 0 },
+  });
+
+  const [selectedNote, setSelectedNote] = useState('1');
+  const notesList = [
+    { key: '1', label: 'Note 1: Capitation Grants for Tuition' },
+    { key: '2', label: 'Note 2: Capitation Grants for Operations' },
+    { key: '3', label: 'Note 3: Revenue for Infrastructure' },
+    { key: '4', label: 'Note 4: Capitation grants for Special Needs' },
+    { key: '5', label: 'Note 5: Grants from Donors and Development Partners' },
+    { key: '6', label: 'Note 6: Transfers from Other Government Entities' },
+    { key: '7', label: 'Note 7: Contributions and Donations' },
+    { key: '8', label: 'Note 8: Parents contributions / School fund' },
+    { key: '9', label: 'Note 9: Miscellaneous Revenue' },
+    { key: '10', label: 'Note 10: Finance Income' },
+  ];
+
+  const noteData = notes[`note${selectedNote}`];
+
+  return (
+    <div className="fy-section">
+      <div className="fy-section-header">
+        <h3 className="fy-section-title">Income Notes 1-10</h3>
+      </div>
+
+      <div className="fy-notes-nav">
+        {notesList.map((n) => (
+          <button
+            key={n.key}
+            className={`fy-notes-nav-item ${selectedNote === n.key ? 'fy-notes-nav-item--active' : ''}`}
+            onClick={() => setSelectedNote(n.key)}
+          >
+            {n.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="fy-account-section">
+        <h4 className="fy-account-subtitle">{notesList.find(n => n.key === selectedNote)?.label}</h4>
+        <table className="fy-statement-table">
+          <thead>
+            <tr>
+              <th>DESCRIPTION</th>
+              <th className="fy-table-num">CURRENT FY (KSHS)</th>
+              <th className="fy-table-num">COMPARATIVE FY (KSHS)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Teaching/learning materials</td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={noteData?.currentFY || 0} 
+                  onChange={(e) => setNotes({...notes, [`note${selectedNote}`]: {...noteData, currentFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={noteData?.comparativeFY || 0} 
+                  onChange={(e) => setNotes({...notes, [`note${selectedNote}`]: {...noteData, comparativeFY: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+            </tr>
+            <tr>
+              <td>Other (specify)</td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={noteData?.other || 0} 
+                  onChange={(e) => setNotes({...notes, [`note${selectedNote}`]: {...noteData, other: Number(e.target.value)}})}
+                  disabled={isFinalized} />
+              </td>
+              <td className="fy-table-num">
+                <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
+              </td>
+            </tr>
+            <tr className="fy-statement-total">
+              <td><strong>Total</strong></td>
+              <td className="fy-table-num"><strong>{formatAmount((noteData?.currentFY || 0) + (noteData?.other || 0))}</strong></td>
+              <td className="fy-table-num"><strong>{formatAmount(noteData?.comparativeFY || 0)}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ---- Overview Section ----------------------------------------------------
 function OverviewSection({ year, totals, inventories, setInventories, isFinalized, handleSaveAdditionalInfo, savingInfo, compareId, setCompareId, compareOptions }) {
   const totalInventory = Object.values(inventories).reduce((sum, val) => sum + Number(val), 0);
@@ -308,201 +822,6 @@ function OverviewSection({ year, totals, inventories, setInventories, isFinalize
             <label>Accrued interest on loan</label>
             <input type="number" className="fy-info-input" value={inventories.accruedInterest || 0} onChange={(e) => setInventories(prev => ({ ...prev, accruedInterest: Number(e.target.value) }))} disabled={isFinalized} />
           </div>
-        </div>
-      </div>
-
-      <div className="fy-info-panel">
-        <h4 className="fy-info-section-title">2-4) School type, budgetary assumptions and actual enrolment</h4>
-        <div className="fy-info-grid">
-          <div className="fy-info-field">
-            <label>School type note</label>
-            <textarea className="fy-textarea" placeholder="e.g. The school was a mixed day and Boarding School" disabled={isFinalized} />
-          </div>
-          <div className="fy-info-field">
-            <label>Budgetary assumption</label>
-            <input type="text" className="fy-text-input" placeholder="Mixed School" disabled={isFinalized} />
-          </div>
-          <div className="fy-info-field">
-            <label>Budgeted boarders</label>
-            <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
-          </div>
-          <div className="fy-info-field">
-            <label>Budgeted day scholars</label>
-            <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
-          </div>
-          <div className="fy-info-field">
-            <label>Budgeted total</label>
-            <input type="number" className="fy-info-input" value={0} disabled />
-          </div>
-          <div className="fy-info-field">
-            <label>Actual boarders</label>
-            <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
-          </div>
-          <div className="fy-info-field">
-            <label>Actual day scholars</label>
-            <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
-          </div>
-          <div className="fy-info-field">
-            <label>Actual total</label>
-            <input type="number" className="fy-info-input" value={0} disabled />
-          </div>
-        </div>
-      </div>
-
-      <div className="fy-info-panel">
-        <h4 className="fy-info-section-title">5) School Fees Structure</h4>
-        <table className="fy-info-table">
-          <thead>
-            <tr>
-              <th>VOTEHEAD</th>
-              <th className="fy-table-num">BOARDERS</th>
-              <th className="fy-table-num">DAY SCHOLARS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {['Repairs, Maintainance & Improv', 'Activity', 'Boarding, Equipment & Stores/Lunch', 'Lunch programme', 'Other voteheads (It&t, ewc, admcost, Pem)', 'Personal Emoluments', 'Administration Cost', 'Electricity, Water & Conservancy', 'Local Transport and Travelling', 'P.A Development'].map((vh) => (
-              <tr key={vh}>
-                <td>{vh}</td>
-                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="fy-info-panel">
-        <h4 className="fy-info-section-title">6) Capitation Grants per learner</h4>
-        <h5 className="fy-info-sub-title">Tuition Account</h5>
-        <table className="fy-info-table">
-          <thead>
-            <tr>
-              <th>VOTEHEAD</th>
-              <th className="fy-table-num">KSHS</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Teaching and Learning Materials</td>
-              <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h5 className="fy-info-sub-title">Operations Account</h5>
-        <table className="fy-info-table">
-          <thead>
-            <tr>
-              <th>VOTEHEAD</th>
-              <th className="fy-table-num">KSHS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {['Personal emoluments', 'Admin costs/Bank charges', 'Local transport / travelling', 'Electricity and water', 'Other Voteheads', 'Maintenance & improvement', 'Medical & Insurance', 'Activity'].map((vh) => (
-              <tr key={vh}>
-                <td>{vh}</td>
-                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="fy-info-panel">
-        <h4 className="fy-info-section-title">7-8) Fee arrears and house rent debtors</h4>
-        <table className="fy-info-table">
-          <thead>
-            <tr>
-              <th>VOTEHEAD</th>
-              <th className="fy-table-num">AMOUNT</th>
-            </tr>
-          </thead>
-          <tbody>
-            {['Repairs, Maintainance & Improv', 'Activity fees', 'Boarding, Equipment & Stores/Lunch', 'Lunch programme', 'Other voteheads (It&t, ewc, admcost, Pem)', 'P.A Development'].map((vh) => (
-              <tr key={vh}>
-                <td>{vh}</td>
-                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-              </tr>
-            ))}
-            <tr className="fy-info-total">
-              <td><strong>Total</strong></td>
-              <td className="fy-table-num"><strong>0.00</strong></td>
-            </tr>
-          </tbody>
-        </table>
-        <div className="fy-info-field">
-          <label>House Rent debtors</label>
-          <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
-        </div>
-      </div>
-
-      <div className="fy-info-panel">
-        <h4 className="fy-info-section-title">9) Trade Creditors</h4>
-        <table className="fy-info-table">
-          <thead>
-            <tr>
-              <th>VOTEHEAD</th>
-              <th className="fy-table-num">BOARDING ACCOUNT</th>
-              <th className="fy-table-num">TUITION ACCOUNT</th>
-            </tr>
-          </thead>
-          <tbody>
-            {['Repairs, Maintainance & Improv', 'Boarding, Equipment & Stores/Lunch', 'Administration Cost', 'Electricity, Water & Conservancy', 'Laboratory Equipments'].map((vh) => (
-              <tr key={vh}>
-                <td>{vh}</td>
-                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="fy-info-panel">
-        <h4 className="fy-info-section-title">10) Inventories as at year end</h4>
-        <table className="fy-info-table">
-          <thead>
-            <tr>
-              <th>ITEM</th>
-              <th className="fy-table-num">PURCHASE COST</th>
-              <th className="fy-table-num">REPLACEMENT COST</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              'Food Stuffs - BES (School Fund)',
-              'Stationery - TLM (Tuition)',
-              'Laboratory Chemicals - TLM (Tuition)',
-              'Pharmaceutical - Medical and Insurance (Operations)',
-              'Cleaning Materials - BES (School Fund)'
-            ].map((item) => (
-              <tr key={item}>
-                <td>{item}</td>
-                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-                <td className="fy-table-num"><input type="number" className="fy-info-input" value={0} disabled={isFinalized} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="fy-info-panel">
-        <h4 className="fy-info-section-title">11-14) Narrative disclosures</h4>
-        <div className="fy-info-field">
-          <label>Dormant accounts / other cash notes</label>
-          <textarea className="fy-textarea" placeholder="Enter details about dormant accounts..." disabled={isFinalized} />
-        </div>
-        <div className="fy-info-field">
-          <label>Prepaid insurance / other prepayments</label>
-          <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
-        </div>
-        <div className="fy-info-field">
-          <label>Fixed deposit interest</label>
-          <input type="number" className="fy-info-input" value={0} disabled={isFinalized} />
-        </div>
-        <div className="fy-info-field">
-          <label>Assets budgeted and charged under BES</label>
-          <textarea className="fy-textarea" placeholder="Enter details..." disabled={isFinalized} />
         </div>
       </div>
     </>
@@ -1401,47 +1720,19 @@ function FinancialYear() {
           )}
 
           {activeSection === 'notes' && (
-            <div className="fy-section">
-              <h3 className="fy-section-title">Notes</h3>
-              <p className="fy-section-sub">Add narrative disclosures and notes to the financial statements.</p>
-              <div className="fy-section-content">
-                <span className="fy-section-icon">📝</span>
-                <p>Notes to the financial statements will appear here based on the data entered.</p>
-              </div>
-            </div>
+            <NotesSection year={year} isFinalized={isFinalized} />
           )}
 
           {activeSection === 'cash-bank' && (
-            <div className="fy-section">
-              <h3 className="fy-section-title">Cash and Bank</h3>
-              <p className="fy-section-sub">Manage cash and bank account balances and transactions.</p>
-              <div className="fy-section-content">
-                <span className="fy-section-icon">💰</span>
-                <p>Cash and bank balances will appear here based on the financial data.</p>
-              </div>
-            </div>
+            <CashBankSection year={year} isFinalized={isFinalized} />
           )}
 
           {activeSection === 'receivables' && (
-            <div className="fy-section">
-              <h3 className="fy-section-title">Receivables</h3>
-              <p className="fy-section-sub">Track amounts owed to the school from debtors and other entities.</p>
-              <div className="fy-section-content">
-                <span className="fy-section-icon">📋</span>
-                <p>Receivables will appear here based on the financial data.</p>
-              </div>
-            </div>
+            <ReceivablesSection year={year} isFinalized={isFinalized} />
           )}
 
           {activeSection === 'payables' && (
-            <div className="fy-section">
-              <h3 className="fy-section-title">Payables</h3>
-              <p className="fy-section-sub">Manage creditors, suppliers, and other amounts owed by the school.</p>
-              <div className="fy-section-content">
-                <span className="fy-section-icon">📊</span>
-                <p>Payables will appear here based on the financial data.</p>
-              </div>
-            </div>
+            <PayablesSection year={year} isFinalized={isFinalized} />
           )}
 
           {activeSection === 'financial-statements' && (
