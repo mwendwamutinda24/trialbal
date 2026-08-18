@@ -6,6 +6,744 @@
   padding: 48px 16px;
   background: #f4f6fb;
 }
+/* ---------------------------------------------------------------------------
+   FinancialYear.css — complete styles for FinancialYear.jsx
+   Integrated with hk-* (Home) and fy-* (NewFinancialYear) styles.
+   All sections are fully styled with real content (no "Coming soon").
+--------------------------------------------------------------------------- */
+
+/* ---- reset / base extensions --------------------------------------------- */
+.fy-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ---- header ------------------------------------------------------------- */
+.fy-shell-header {
+  flex-shrink: 0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 0 1.5rem;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.fy-sidebar-toggle {
+  background: none;
+  border: none;
+  color: #475569;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+.fy-sidebar-toggle:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.fy-shell-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex: 1;
+  margin-left: 1.5rem;
+}
+.fy-shell-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.fy-shell-nav-link:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.fy-shell-year-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f1f5f9;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+/* ---- body (sidebar + main) ----------------------------------------------- */
+.fy-shell-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ---- sidebar ------------------------------------------------------------- */
+.fy-side {
+  width: 220px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  padding: 1.25rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.2s, margin 0.2s;
+  overflow-y: auto;
+}
+.fy-shell--collapsed .fy-side {
+  width: 60px;
+  padding: 1.25rem 0.5rem;
+}
+
+.fy-side-year {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1.25rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+.fy-shell--collapsed .fy-side-year {
+  padding: 0.5rem;
+  text-align: center;
+}
+.fy-side-year-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin: 0 0 0.125rem 0;
+}
+.fy-side-year-dates {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 0 0 0.25rem 0;
+}
+.fy-shell--collapsed .fy-side-year-dates,
+.fy-shell--collapsed .fy-side-year-label {
+  font-size: 0.6rem;
+}
+
+/* sidebar nav */
+.fy-side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  margin-bottom: 1rem;
+}
+.fy-side-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  width: 100%;
+  text-align: left;
+}
+.fy-side-nav-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.fy-side-nav-item--active {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+}
+.fy-shell--collapsed .fy-side-nav-item span {
+  display: none;
+}
+.fy-shell--collapsed .fy-side-nav-item {
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+/* status toggle button in sidebar */
+.fy-side-status-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: auto;
+}
+.fy-side-status-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+.fy-side-status-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- main content -------------------------------------------------------- */
+.fy-shell-main {
+  flex: 1;
+  padding: 1.5rem 2rem 2.5rem;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+/* compare row */
+.fy-compare-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  color: #334155;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.25rem;
+}
+.fy-compare-current {
+  font-weight: 600;
+  color: #0f172a;
+  background: #f1f5f9;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+}
+.fy-compare-select {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+/* ---- stat cards (reuse hk-grid-stats) ------------------------------------ */
+.hk-grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.hk-stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: box-shadow 0.15s;
+}
+.hk-stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+.hk-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hk-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin: 0 0 0.125rem 0;
+}
+.hk-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* additional info */
+.fy-info-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+.fy-info-header-row .hk-section-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.fy-info-panel {
+  margin-top: 0.75rem;
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+.fy-info-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.75rem 0;
+}
+
+.fy-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.fy-info-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.fy-info-table td {
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.fy-info-table tr:last-child td {
+  border-bottom: none;
+}
+.fy-info-input {
+  width: 110px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: right;
+  background: #fafafa;
+  transition: border 0.15s;
+}
+.fy-info-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+}
+.fy-info-input:disabled {
+  background: #f1f5f9;
+  opacity: 0.7;
+}
+
+/* ---- trial balance ------------------------------------------------------- */
+.fy-tb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.fy-tb-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fy-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+.fy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+.fy-table thead {
+  background: #f8fafc;
+}
+.fy-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #334155;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.fy-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.fy-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.fy-table tfoot td {
+  font-weight: 600;
+  padding: 0.625rem 0.75rem;
+  border-top: 2px solid #cbd5e1;
+  background: #fafafa;
+}
+.fy-table-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.fy-imbalance-warning {
+  margin-top: 0.75rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  font-size: 0.85rem;
+}
+
+/* ---- buttons ------------------------------------------------------------- */
+.fy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.fy-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+.fy-btn--primary {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+}
+.fy-btn--primary:hover {
+  background: #4338ca;
+  border-color: #4338ca;
+}
+.fy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- status badge -------------------------------------------------------- */
+.fy-status-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: inline-block;
+}
+.fy-status-badge--draft {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.fy-status-badge--final {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* ---- placeholder sections (now fully styled, no "coming soon") ---------- */
+.fy-section-full {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.fy-section-full h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+.fy-section-full .fy-section-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+}
+.fy-section-full .fy-section-placeholder-content {
+  background: #fafafa;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+.fy-section-full .fy-section-placeholder-content p {
+  margin: 0.25rem 0;
+}
+.fy-section-full .fy-section-placeholder-content .fy-icon-big {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* ---- loading / error states ---------------------------------------------- */
+.hk-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  color: #64748b;
+  font-size: 1rem;
+}
+.nfy-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+.fy-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+.fy-breadcrumb:hover {
+  text-decoration: underline;
+}
+
+/* ---- profile menu (reuse hk) --------------------------------------------- */
+.hk-profile-menu {
+  position: relative;
+}
+.hk-profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.hk-profile-trigger:hover {
+  background: #f1f5f9;
+}
+.hk-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+.hk-profile-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  text-align: left;
+}
+.hk-profile-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+.hk-profile-role {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+.hk-chevron {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+}
+.hk-profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  min-width: 160px;
+  padding: 0.25rem;
+  z-index: 50;
+}
+.hk-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  width: 100%;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.hk-dropdown-item:hover {
+  background: #f1f5f9;
+}
+.hk-dropdown-item--danger {
+  color: #b91c1c;
+}
+.hk-dropdown-item--danger:hover {
+  background: #fef2f2;
+}
+
+/* ---- empty state --------------------------------------------------------- */
+.hk-empty-state {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+.hk-empty-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 0.25rem 0;
+}
+.hk-empty-sub {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ---- panels -------------------------------------------------------------- */
+.hk-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+.hk-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.hk-panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 0.125rem 0;
+}
+.hk-panel-subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ---- responsive ---------------------------------------------------------- */
+@media (max-width: 768px) {
+  .fy-shell-header {
+    padding: 0 1rem;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 64px;
+    gap: 0.5rem;
+  }
+  .fy-shell-body {
+    flex-direction: column;
+  }
+  .fy-side {
+    width: 100% !important;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
+  .fy-side-year {
+    display: none;
+  }
+  .fy-side-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0;
+  }
+  .fy-side-nav-item {
+    width: auto;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+  }
+  .fy-side-status-btn {
+    margin-top: 0;
+  }
+  .fy-shell-main {
+    padding: 1rem;
+  }
+  .hk-grid-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fy-shell--collapsed .fy-side-nav-item span {
+    display: inline;
+  }
+  .fy-shell--collapsed .fy-side {
+    width: 100% !important;
+  }
+  .fy-shell--collapsed .fy-side-nav-item {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .hk-grid-stats {
+    grid-template-columns: 1fr;
+  }
+  .fy-tb-header {
+    flex-direction: column;
+  }
+  .fy-compare-row {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .fy-shell-nav {
+    gap: 0.5rem;
+    margin-left: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
 
 .register-card {
   width: 100%;
