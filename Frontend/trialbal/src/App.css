@@ -4,12 +4,845 @@
 --------------------------------------------------------------------------- */
 
 /* ---- reset & base -------------------------------------------------------- */
-/* ---------------------------------------------------------------------------
-   FinancialYear.css — Complete styles for FinancialYear component
-   All classNames use 'fy-' prefix for consistency
---------------------------------------------------------------------------- */
+.fy-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f1f5f9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #0f172a;
+}
 
-/* ---- reset & base -------------------------------------------------------- */
+/* ---- header -------------------------------------------------------------- */
+.fy-header {
+  flex-shrink: 0;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 1.75rem;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.fy-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fy-toggle-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  padding: 0.375rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s;
+}
+.fy-toggle-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.fy-school-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #eef2ff;
+  border-radius: 8px;
+  color: #4f46e5;
+}
+
+.fy-school-info {
+  line-height: 1.3;
+}
+.fy-school-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.fy-school-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+.fy-school-edit-icon {
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.fy-school-edit-icon:hover {
+  color: #4f46e5;
+}
+.fy-school-county {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.fy-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+  margin-left: 1.75rem;
+}
+
+.fy-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.fy-nav-link:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.fy-year-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f1f5f9;
+  padding: 0.25rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+/* ---- profile menu -------------------------------------------------------- */
+.fy-profile-wrap {
+  position: relative;
+}
+
+.fy-profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.fy-profile-trigger:hover {
+  background: #f1f5f9;
+}
+
+.fy-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.fy-profile-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  text-align: left;
+}
+.fy-profile-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+.fy-profile-role {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.fy-chevron-icon {
+  width: 14px;
+  height: 14px;
+  color: #94a3b8;
+}
+
+.fy-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  min-width: 170px;
+  padding: 0.25rem;
+  z-index: 60;
+}
+.fy-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.875rem;
+  border: none;
+  background: none;
+  width: 100%;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.fy-dropdown-item:hover {
+  background: #f1f5f9;
+}
+.fy-dropdown-item--danger {
+  color: #b91c1c;
+}
+.fy-dropdown-item--danger:hover {
+  background: #fef2f2;
+}
+
+/* ---- body layout --------------------------------------------------------- */
+.fy-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ---- sidebar ------------------------------------------------------------- */
+.fy-sidebar {
+  width: 230px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  padding: 1.25rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.25s ease, padding 0.25s ease;
+  overflow-y: auto;
+}
+
+.fy-page--collapsed .fy-sidebar {
+  width: 64px;
+  padding: 1.25rem 0.5rem;
+}
+
+.fy-sidebar-year {
+  padding: 0.625rem 0.875rem;
+  margin-bottom: 1.25rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.25s;
+}
+.fy-page--collapsed .fy-sidebar-year {
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.fy-sidebar-year-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin: 0 0 0.125rem 0;
+}
+.fy-sidebar-year-dates {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 0 0 0.375rem 0;
+}
+.fy-page--collapsed .fy-sidebar-year-dates,
+.fy-page--collapsed .fy-sidebar-year-label {
+  font-size: 0.6rem;
+}
+
+/* status badge */
+.fy-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 0.125rem 0.6rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: inline-block;
+}
+.fy-badge--draft {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.fy-badge--final {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* sidebar nav */
+.fy-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.fy-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+  text-align: left;
+}
+.fy-nav-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.fy-nav-item--active {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+.fy-page--collapsed .fy-nav-item span {
+  display: none;
+}
+.fy-page--collapsed .fy-nav-item {
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+/* status toggle button */
+.fy-status-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: auto;
+}
+.fy-status-toggle:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+.fy-status-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- main content -------------------------------------------------------- */
+.fy-main {
+  flex: 1;
+  padding: 1.75rem 2.25rem 2.5rem;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+/* loading & error */
+.fy-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #64748b;
+  font-size: 1rem;
+}
+.fy-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+.fy-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #4f46e5;
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+.fy-back-link:hover {
+  text-decoration: underline;
+}
+
+/* ---- compare row --------------------------------------------------------- */
+.fy-compare {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: #334155;
+  background: #ffffff;
+  padding: 0.625rem 1.125rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+.fy-compare-current {
+  font-weight: 600;
+  color: #0f172a;
+  background: #f1f5f9;
+  padding: 0.125rem 0.625rem;
+  border-radius: 4px;
+}
+.fy-compare-select {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+/* ---- stat cards ---------------------------------------------------------- */
+.fy-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.fy-stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: box-shadow 0.2s;
+}
+.fy-stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.fy-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fy-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin: 0 0 0.125rem 0;
+}
+.fy-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* ---- hint ---------------------------------------------------------------- */
+.fy-hint {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1.25rem 0;
+}
+
+/* ---- additional info ----------------------------------------------------- */
+.fy-info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+.fy-info-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.fy-info-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+}
+
+.fy-info-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+
+.fy-info-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.75rem 0;
+}
+
+.fy-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.fy-info-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.fy-info-table td {
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.fy-info-table tr:last-child td {
+  border-bottom: none;
+}
+.fy-info-total td {
+  border-top: 2px solid #cbd5e1;
+  padding-top: 0.625rem;
+  font-weight: 600;
+}
+
+.fy-info-input {
+  width: 120px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: right;
+  background: #fafafa;
+  transition: all 0.15s;
+}
+.fy-info-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+.fy-info-input:disabled {
+  background: #f1f5f9;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- buttons ------------------------------------------------------------- */
+.fy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.375rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.fy-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+.fy-btn--primary {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+}
+.fy-btn--primary:hover {
+  background: #4338ca;
+  border-color: #4338ca;
+}
+.fy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- trial balance ------------------------------------------------------- */
+.fy-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+
+.fy-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.fy-panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 0.125rem 0;
+}
+.fy-panel-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.fy-tb-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fy-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+
+.fy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+.fy-table thead {
+  background: #f8fafc;
+}
+.fy-table th {
+  text-align: left;
+  font-weight: 600;
+  color: #334155;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.fy-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.fy-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.fy-table tfoot td {
+  font-weight: 600;
+  padding: 0.625rem 0.75rem;
+  border-top: 2px solid #cbd5e1;
+  background: #fafafa;
+}
+.fy-table-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.fy-imbalance {
+  margin-top: 0.75rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  padding: 0.5rem 0.875rem;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  font-size: 0.85rem;
+}
+
+/* ---- empty state --------------------------------------------------------- */
+.fy-empty {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+.fy-empty-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 0.25rem 0;
+}
+.fy-empty-sub {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ---- section placeholder ------------------------------------------------- */
+.fy-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.fy-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+}
+.fy-section-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1.25rem 0;
+}
+.fy-section-content {
+  background: #fafafa;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+.fy-section-content p {
+  margin: 0.25rem 0;
+}
+.fy-section-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* ---- responsive ---------------------------------------------------------- */
+@media (max-width: 992px) {
+  .fy-nav-links {
+    gap: 0.75rem;
+    margin-left: 1rem;
+  }
+  .fy-main {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .fy-header {
+    padding: 0 1rem;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 64px;
+    gap: 0.5rem;
+  }
+  .fy-body {
+    flex-direction: column;
+  }
+  .fy-sidebar {
+    width: 100% !important;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+    overflow-x: auto;
+  }
+  .fy-sidebar-year {
+    display: none;
+  }
+  .fy-sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0;
+  }
+  .fy-nav-item {
+    width: auto;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+  }
+  .fy-status-toggle {
+    margin-top: 0;
+  }
+  .fy-main {
+    padding: 1rem;
+  }
+  .fy-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .fy-page--collapsed .fy-nav-item span {
+    display: inline;
+  }
+  .fy-page--collapsed .fy-sidebar-nav {
+    flex-direction: row;
+  }
+  .fy-page--collapsed .fy-nav-item {
+    justify-content: flex-start;
+    padding: 0.25rem 0.625rem;
+  }
+  .fy-page--collapsed .fy-sidebar-year {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .fy-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .fy-panel-header {
+    flex-direction: column;
+  }
+  .fy-compare {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .fy-nav-links {
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .fy-nav-link {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.375rem;
+  }
+  .fy-year-pill {
+    font-size: 0.7rem;
+    padding: 0.125rem 0.625rem;
+  }
+  .fy-header-left .fy-school-name {
+    font-size: 0.8rem;
+  }
+  .fy-info-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .fy-info-input {
+    width: 80px;
+  }
+}
 .fy-page {
   display: flex;
   flex-direction: column;
