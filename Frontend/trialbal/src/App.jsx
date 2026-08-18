@@ -49,7 +49,7 @@ function App() {
           path="/financial-years"
           element={
             <ProtectedRoute>
-              <NewFinancialYear/>
+              <NewFinancialYear />
             </ProtectedRoute>
           }
         />
