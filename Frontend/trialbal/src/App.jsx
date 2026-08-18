@@ -33,6 +33,7 @@ function App() {
 
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
+        
         <Route path="/register" element={<Register />} />
 
         {/* Protected routes */}
@@ -44,6 +45,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+         <Route
+          path="/financial-years"
+          element={
+            <ProtectedRoute>
+              <NewFinancialYear/>
+            </ProtectedRoute>
+          }
+        />
+         
         <Route
           path="/home"
           element={
