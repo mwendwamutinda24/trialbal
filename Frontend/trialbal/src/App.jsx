@@ -18,7 +18,7 @@ function App() {
           path="/financial-years/new"
           element={
             <ProtectedRoute>
-              <NewFinancialYear />
+              <FinancialYear />
             </ProtectedRoute>
           }
         />
