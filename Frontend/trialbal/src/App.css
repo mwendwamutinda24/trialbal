@@ -4,6 +4,12 @@
 --------------------------------------------------------------------------- */
 
 /* ---- reset & base -------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   FinancialYear.css — Complete styles for FinancialYear component
+   All classNames use 'fy-' prefix for consistency
+--------------------------------------------------------------------------- */
+
+/* ---- reset & base -------------------------------------------------------- */
 .fy-page {
   display: flex;
   flex-direction: column;
@@ -96,66 +102,6 @@
   gap: 1.5rem;
   flex: 1;
   margin-left:
-.register-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 16px;
-  background: #f4f6fb;
-}
-
-@media (max-width: 480px) {
-  .fy-stats-grid {
-    grid-template-columns: 1fr;
-  }
-  .fy-panel-header {
-    flex-direction: column;
-  }
-  .fy-compare {
-    flex-wrap: wrap;
-    gap: 0.3rem;
-  }
-  .fy-nav-links {
-    gap: 0.4rem;
-    flex-wrap: wrap;
-  }
-  .fy-nav-link {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.375rem;
-  }
-  .fy-year-pill {
-    font-size: 0.7rem;
-    padding: 0.125rem 0.625rem;
-  }
-  .fy-header-left .fy-school-name {
-    font-size: 0.8rem;
-  }
-  .fy-info-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .hk-grid-stats {
-    grid-template-columns: 1fr;
-  }
-  .fy-tb-header {
-    flex-direction: column;
-  }
-  .fy-compare-row {
-    flex-wrap: wrap;
-    gap: 0.3rem;
-  }
-  .fy-shell-nav {
-    gap: 0.5rem;
-    margin-left: 0.5rem;
-    flex-wrap: wrap;
-  }
-}
-
 .register-card {
   width: 100%;
   max-width: 528px;
